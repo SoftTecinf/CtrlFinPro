@@ -2,9 +2,6 @@
 const API_URL = "https://script.google.com/macros/s/AKfycbx87PyaYtEDgPqomoCuBCd59yUIXW04Sl5JioZ1hxpJAXfOwiWTbuIajMXGfEEMKbRDUg/exec";
 let editandoId = null;
 let chartH, chartR;
-// En el nivel más alto de app.js
-//let ingM = 40800;
-//let gasM = 0;
 
 // app.js
 window.AppState = {
@@ -13,7 +10,7 @@ window.AppState = {
     filtrosActuales: {
         busqueda: '',
         categoria: 'todos',
-        mes: new Date().getMonth(), // Usamos la fecha actual solo si no hay nada guardado
+        mes: new Date().getMonth(),
         año: new Date().getFullYear()
     },
     cargado: false
@@ -21,10 +18,15 @@ window.AppState = {
 
 // --- 1. INICIALIZACIÓN (Punto de entrada único) ---
 document.addEventListener('DOMContentLoaded', async () => {
-    // 0. VALIDACIÓN DE SEGURIDAD (Control de Sesión)
-    const sesionActiva = localStorage.getItem('usuarioLogueado');
+    // 🛡️ CONTROL DE SESIÓN SEGURO: Si estamos en el login, no validamos sesión para evitar bucles
+    if (window.location.pathname.includes('login.html')) {
+        console.log("Página de login detectada. Omitiendo validación de sesión.");
+        return;
+    }
+
+    // 0. VALIDACIÓN DE SEGURIDAD (Control de Sesión para index.html)
+    const sesionActiva = localStorage.getItem('usuarioLogueado') || localStorage.getItem('isLoggedIn');
     if (!sesionActiva) {
-        // Redirigimos de inmediato al login sin borrar el body para evitar pantallas en blanco
         window.location.replace("login.html");
         return;
     }
@@ -74,7 +76,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         btn.classList.add('nav-active');
     }
 
-    // 6. SINCRONIZAR SELECTORES DE UI (Incluyendo los nuevos del Home: res-mes y res-año)
+    // 6. SINCRONIZAR SELECTORES DE UI
     const state = window.AppState;
     const selectoresMes = ['in-mes', 'ex-mes', 'res-mes'];
     const selectoresAnio = ['in-año', 'ex-año', 'res-año'];
@@ -99,7 +101,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // 8. SINCRONIZACIÓN EN SEGUNDO PLANO (Datos reales)
     inicializarSincronizacion().then(() => {
-        // Al terminar la carga real, refrescamos una vez más para asegurar datos frescos
         refrescarVistaActual();
     });
 });
@@ -129,21 +130,16 @@ async function showSection(sectionId) {
         // 3. Control de concurrencia
         if (loadId !== currentLoadId) return;
 
-        // CORRECCIÓN: Primero inyectamos el HTML limpio en el DOM
         container.innerHTML = html;
 
         // 4. Renderizado final y repoblación de datos
         requestAnimationFrame(() => {
-
-            // A. Recuperar nombre de usuario
             const userDisplayEl = document.getElementById('user-display');
             if (userDisplayEl) userDisplayEl.innerText = localStorage.getItem('session_userName') || 'Soporte';
 
-            // B. Re-iniciamos filtros generales de la UI
             if (typeof inicializarFiltros === 'function') inicializarFiltros();
             if (typeof configurarEventosFiltros === 'function') configurarEventosFiltros();
 
-            // C. Lógica específica por sección (Respetando el Estado Global)
             if (sectionId === 'home') {
                 inicializarFuncionesPorSeccion(sectionId);
                 window.ultimaCarga = { i: -1, g: -1 };
@@ -160,7 +156,6 @@ async function showSection(sectionId) {
 
                 const mesSel = document.getElementById('in-mes');
                 if (mesSel) {
-                    // MODIFICADO: Lee el mes del estado global, NO el mes del sistema actual
                     mesSel.value = AppState.filtrosActuales.mes;
                 }
                 inicializarFuncionesPorSeccion(sectionId);
@@ -171,13 +166,11 @@ async function showSection(sectionId) {
 
                 const mesSel = document.getElementById('ex-mes');
                 if (mesSel) {
-                    // MODIFICADO: Lee el mes del estado global, NO el mes del sistema actual
                     mesSel.value = AppState.filtrosActuales.mes;
                 }
                 inicializarFuncionesPorSeccion(sectionId);
             }
             else if (sectionId === 'resumen' || sectionId === 'analisis') {
-                // Bloque explícito para asegurar que la sección de análisis se sincronice al entrar
                 const mesSel = document.getElementById('res-mes');
                 if (mesSel) {
                     mesSel.value = AppState.filtrosActuales.mes;
@@ -185,7 +178,6 @@ async function showSection(sectionId) {
                 inicializarFuncionesPorSeccion(sectionId);
             }
 
-            // D. SINCRONIZACIÓN Y DIBUJO DE DATOS
             const movs = AppState.movimientos || [];
             const cats = AppState.categorias || [];
 
@@ -196,13 +188,11 @@ async function showSection(sectionId) {
                 if ((faltanMovimientos || faltanCategorias) && !AppState.cargado) {
                     inicializarSincronizacion().then(() => {
                         AppState.cargado = true;
-                        inicializarFuncionesPorSeccion(sectionId); // Llena selects de categorías con datos nuevos
+                        inicializarFuncionesPorSeccion(sectionId);
                         refrescarVistaActual();
                         if (typeof toggleLoading === 'function') toggleLoading(false);
                     });
                 } else {
-                    // 🔥 CORRECCIÓN AQUÍ: Aunque los datos ya existan en caché, 
-                    // debemos volver a llenar los selects de categorías del nuevo HTML
                     inicializarFuncionesPorSeccion(sectionId);
                     refrescarVistaActual();
                     if (typeof toggleLoading === 'function') toggleLoading(false);
@@ -225,8 +215,6 @@ function inicializarFuncionesPorSeccion(sectionId) {
     if (idLimpio === 'home') {
         actualizarHome();
         actualizarFechaHeader();
-        // CAMBIO: Quita (ingM, gasM), déjalo vacío. 
-        // La función buscará los valores en window.EstadoFinanciero
         window.ultimaCarga = { i: -1, g: -1 };
         actualizarGraficoDistribucion();
     }
@@ -235,21 +223,18 @@ function inicializarFuncionesPorSeccion(sectionId) {
         actualizarListadoIndividual('ingreso', 'lista-ingresos', 'count-in');
     }
     else if (idLimpio === 'gastos') {
-        actualizarSelectsCategorias(); // Asegura que las categorías se carguen
-        actualizarListadoIndividual('gasto', 'lista-gastos', 'count-ex'); // Usa 'count-ex' como en tu HTML
+        actualizarSelectsCategorias();
+        actualizarListadoIndividual('gasto', 'lista-gastos', 'count-ex');
     }
     else if (idLimpio === 'analisis') {
         actualizarResumen();
     }
-    // 🔴 CAMBIO AQUÍ: Cambiamos 'ajustes' por 'config'
     else if (idLimpio === 'config') {
         abrirVistaAjustesInteligente();
-    } else {
     }
 }
 
 function refrescarVistaActual() {
-    // 🔥 0. ASEGURAR QUE LOS SELECTORES TENGAN UN VALOR POR DEFECTO SI ESTÁN VACÍOS
     const ahora = new Date();
     const mesActual = ahora.getMonth();
     const anioActual = ahora.getFullYear();
@@ -262,7 +247,6 @@ function refrescarVistaActual() {
         if (a && !a.value) a.value = anioActual;
     });
 
-    // 🔥 RASTREADOR DINÁMICO DE FECHA (Busca el saludo "HOLA," en el HTML)
     try {
         let contenedorFecha = document.getElementById('header-fecha') ||
             document.getElementById('fecha-actual') ||
@@ -290,18 +274,13 @@ function refrescarVistaActual() {
         console.warn("⚠️ No se pudo auto-detectar el contenedor de la fecha:", error);
     }
 
-    // ========================================================
-    // TU LÓGICA DE SECCIONES CONTINÚA AQUÍ:
-    // ========================================================
     if (typeof actualizarHome === 'function') {
         actualizarHome();
     }
 
-    // 2. Lógica específica por sección
     const activeBtn = document.querySelector('.nav-active');
     const seccionId = activeBtn ? activeBtn.id : '';
 
-    // 🔥 DETECCIÓN DIRECTA: Si los inputs de análisis están visibles en el DOM, los leemos de inmediato
     const inputInicioAnálisis = document.getElementById('an-fecha-inicio');
     const inputFinAnálisis = document.getElementById('an-fecha-fin');
 
@@ -351,7 +330,6 @@ function refrescarVistaActual() {
 }
 
 window.obtenerMovimientosFiltrados = function() {
-    console.warn("¡Entró a obtenerMovimientosFiltrados!");
     const movimientos = window.AppState?.movimientos || [];
     const { inicio, fin } = window.AppState?.filtrosActuales || {};
 
@@ -387,7 +365,6 @@ window.obtenerMovimientosFiltrados = function() {
 }
 
 function fMXN(monto) {
-    // Convertimos a número, si no es válido, usamos 0
     const valor = parseFloat(monto);
 
     if (isNaN(valor)) {
@@ -398,7 +375,6 @@ function fMXN(monto) {
     return valor.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' });
 }
 
-// app.js (al principio de todo el archivo)
 window.formatearFechaMX = function (fechaString) {
     if (!fechaString) return "";
     const fecha = new Date(fechaString.includes('T') ? fechaString : `${fechaString}T00:00:00`);
