@@ -1,18 +1,19 @@
 <section id="sec-home">
     <!-- 📅 FILTRO DE PERIODO PARA EL HOME -->
-    <div class="flex items-center justify-between mb-8 bg-white p-4 rounded-xl-custom soft-shadow border border-[#E5DDD3]">
-    <div class="flex items-center gap-2">
-        <span class="text-xs uppercase tracking-wider opacity-60 font-bold text-[#8C7E6A]">Periodo del Resumen:</span>
-    </div>
-    <div class="flex gap-2">
-        <div class="toolbar-group flex gap-2">
-            <select id="ex-mes" onchange="refrescarVistaActual()"
-                class="bg-[#F5F2EB] px-3 py-2 rounded-lg text-[10px] font-bold shadow-sm border border-[#E5DDD3] outline-none text-[#45423E]"></select>
-            <select id="ex-año" onchange="refrescarVistaActual()"
-                class="bg-[#F5F2EB] px-3 py-2 rounded-lg text-[10px] font-bold shadow-sm border border-[#E5DDD3] outline-none text-[#45423E]"></select>
+    <div class="flex items-center justify-end gap-3 mb-8">
+        <div class="flex items-center gap-2">
+            <span class="text-xs uppercase tracking-wider opacity-60 font-bold text-[#8C7E6A]">Periodo del
+                Resumen:</span>
+        </div>
+        <div class="flex gap-2">
+            <div class="toolbar-group flex gap-2">
+                <select id="ex-mes" onchange="refrescarVistaActual()"
+                    class="bg-white px-3 py-2 rounded-lg text-[10px] font-bold shadow-sm border-none"></select>
+                <select id="ex-año" onchange="refrescarVistaActual()"
+                    class="bg-white px-3 py-2 rounded-lg text-[10px] font-bold shadow-sm border-none"></select>
+            </div>
         </div>
     </div>
-</div>
 
     <!-- TARJETAS DE RESUMEN -->
     <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-10">
