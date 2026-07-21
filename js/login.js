@@ -21,7 +21,7 @@ var AuthModule = {
         }
     },
 
-    ejecutarLogin: async function () {
+   ejecutarLogin: async function () {
         var usuario = document.getElementById('login-user').value;
         var password = document.getElementById('login-pass').value;
 
@@ -30,8 +30,12 @@ var AuthModule = {
             return;
         }
 
+        console.log("Iniciando sesión para:", usuario);
+
         try {
+            console.log("Llamando a FetchAPI...");
             var res = await FetchAPI("login", { user: usuario, pass: password });
+            console.log("Respuesta obtenida:", res);
 
             if (res && res.success) {
                 localStorage.setItem('session_user', res.usuario || res.user);
@@ -42,18 +46,11 @@ var AuthModule = {
                 window.location.href = "./index.html";
             } else {
                 var msg = res && res.message ? res.message : "Usuario o contraseña incorrectos.";
-                var errorLabel = document.getElementById('login-error');
-
-                if (errorLabel) {
-                    errorLabel.innerText = msg;
-                    errorLabel.classList.remove('hidden');
-                } else {
-                    alert(msg);
-                }
+                alert(msg);
             }
         } catch (err) {
-            console.error("Error en la petición de login:", err);
-            alert("Hubo un problema al conectar con el servidor.");
+            console.error("Error atrapado en el login:", err);
+            alert("Error al conectar con el servidor. Revisa la consola.");
         }
     }
 };
