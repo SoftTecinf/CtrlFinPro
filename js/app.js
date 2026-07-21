@@ -20,7 +20,6 @@ window.AppState = {
 document.addEventListener('DOMContentLoaded', async () => {
     // 🛡️ CONTROL DE SESIÓN SEGURO: Si estamos en el login, no validamos sesión para evitar bucles
     if (window.location.pathname.includes('login.html')) {
-        console.log("Página de login detectada. Omitiendo validación de sesión.");
         return;
     }
 
