@@ -24,7 +24,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     // 1. DEFINICIÓN DE TIEMPO
     const ahora = new Date();
 
-    // 2. RECUPERAR ESTADO (Cache Primero)
+    // 2. ASEGURAR QUE EL ESTADO GLOBAL EXISTA
+    window.AppState = window.AppState || {};
+    window.AppState.filtrosActuales = window.AppState.filtrosActuales || {};
+
+    // 3. RECUPERAR ESTADO (Cache Primero)
     const savedState = localStorage.getItem('financiero_state');
     if (savedState) {
         try {
@@ -36,7 +40,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
-    // 3. APLICAR VALORES POR DEFECTO (Solo si NO existen en el caché)
+    // 4. APLICAR VALORES POR DEFECTO (Solo si NO existen en el caché)
     if (window.AppState.filtrosActuales.mes === undefined) {
         window.AppState.filtrosActuales.mes = ahora.getMonth();
     }
@@ -44,9 +48,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         window.AppState.filtrosActuales.año = ahora.getFullYear();
     }
 
-    // 4. ACTUALIZAR UI (Encabezado y Sección)
-    // Actualizamos la fecha del header (HOLA, SOPORTE, JUEVES 16...)
-    const headerDate = document.getElementById('fecha-header'); // Asegúrate que tu HTML tenga este ID
+    // 5. ACTUALIZAR UI (Encabezado y Sección)
+    const headerDate = document.getElementById('fecha-header');
     if (headerDate) {
         const opciones = { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' };
         headerDate.innerText = ahora.toLocaleDateString('es-MX', opciones).toUpperCase();
@@ -63,7 +66,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         btn.classList.add('nav-active');
     }
 
-    // 5. SINCRONIZAR SELECTORES DE UI CON EL ESTADO RECUPERADO
+    // 6. SINCRONIZAR SELECTORES DE UI (Incluyendo los nuevos del Home: res-mes y res-año)
     const state = window.AppState;
     const selectoresMes = ['in-mes', 'ex-mes', 'res-mes'];
     const selectoresAnio = ['in-año', 'ex-año', 'res-año'];
@@ -83,10 +86,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         inputFecha.value = ahora.toISOString().split('T')[0];
     }
 
-    // 6. EJECUTAR REFRESCO INICIAL (Con datos de caché)
+    // 7. EJECUTAR REFRESCO INICIAL (Con datos de caché)
     refrescarVistaActual();
 
-    // 7. SINCRONIZACIÓN EN SEGUNDO PLANO (Datos reales)
+    // 8. SINCRONIZACIÓN EN SEGUNDO PLANO (Datos reales)
     inicializarSincronizacion().then(() => {
         // Al terminar la carga real, refrescamos una vez más para asegurar datos frescos
         refrescarVistaActual();
