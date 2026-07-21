@@ -15,11 +15,11 @@
 
     <!-- Overlay de carga inicial -->
     <!-- Borra esto por completo -->
-    <div id="loading-overlay" class="fixed inset-0 z-[100] flex flex-col items-center justify-center">
+    <div id="loading-overlay"
+        class="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-white transition-opacity duration-300">
         <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-stone-700 mb-4"></div>
         <p class="text-xs font-bold uppercase tracking-widest text-stone-500">Conectando con el Sistema...</p>
     </div>
-
     <div class="w-full max-w-md bg-white p-8 rounded-xl-custom soft-shadow border border-stone-200">
 
         <!-- Cambiamos el form por un div para evitar recargas automáticas por errores de eventos -->
