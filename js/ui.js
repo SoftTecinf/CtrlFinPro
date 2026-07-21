@@ -2,13 +2,7 @@
 // --- RENDERIZADOS LOCALES ---
 // ==========================================
 function actualizarListadoIndividual(tipo, contId, countId) {
-    // 🛠️ Blindaje para extraer correctamente el arreglo plano de movimientos
-    let rawMovs = AppState.movimientos || [];
-    if (!Array.isArray(rawMovs) && typeof rawMovs === 'object') {
-        rawMovs = rawMovs.movimientos || Object.values(rawMovs);
-    }
-    const todosLosMovimientos = Array.isArray(rawMovs) ? rawMovs : [];
-
+    const todosLosMovimientos = obtenerMovimientosPlanos();
     const tipoNormalizado = tipo.toLowerCase().trim();
 
     const pref = tipoNormalizado === 'ingreso' ? 'in' : 'ex';
@@ -30,30 +24,25 @@ function actualizarListadoIndividual(tipo, contId, countId) {
     const fechaInicioStr = inputInicio ? inputInicio.value : defectoInicio;
     const fechaFinStr = inputFin ? inputFin.value : defectoFin;
 
-    // Convertimos los límites del filtro a milisegundos para comparar matemáticamente
     const inicioTime = new Date(fechaInicioStr + 'T00:00:00').getTime();
     const finTime = new Date(fechaFinStr + 'T23:59:59').getTime();
 
-    // Filtramos validando tipo y rango de tiempo exacto
     const filtrados = todosLosMovimientos.filter(m => {
         if (!m.fecha) return false;
 
         const tipoMov = (m.tipo || '').toLowerCase().trim();
         if (tipoMov !== tipoNormalizado) return false;
 
-        // Convertimos la fecha del movimiento a timestamp
         const movTime = new Date(m.fecha).getTime();
         if (isNaN(movTime)) return false;
 
         return movTime >= inicioTime && movTime <= finTime;
     }).reverse();
 
-    // Actualizamos el contador
     const realCountId = tipoNormalizado === 'ingreso' ? 'count-in' : 'count-ex';
     const countEl = document.getElementById(realCountId) || document.getElementById(countId);
     if (countEl) countEl.innerText = `${filtrados.length} MOVIMIENTOS`;
 
-    // Renderizamos en el contenedor correcto
     const realContId = tipoNormalizado === 'ingreso' ? 'lista-ingresos' : 'lista-gastos';
     const cont = document.getElementById(realContId) || document.getElementById(countId);
 
@@ -93,6 +82,87 @@ function actualizarListadoIndividual(tipo, contId, countId) {
     });
 
     cont.innerHTML = htmlAcumulado;
+}
+
+function actualizarResumen() {
+    try {
+        let rawFiltrados = obtenerMovimientosPlanos();
+        const { inicio, fin } = window.AppState?.filtrosActuales || {};
+        let filtrados = rawFiltrados.map(normalizarMovimiento).filter(Boolean);
+
+        if (inicio && fin) {
+            const numInicio = parseInt(inicio.replace(/-/g, ''), 10);
+            const numFin = parseInt(fin.replace(/-/g, ''), 10);
+
+            filtrados = filtrados.filter(m => {
+                if (!m.dateObj || isNaN(m.dateObj.getTime())) return false;
+
+                const anio = m.dateObj.getFullYear();
+                const mes = String(m.dateObj.getMonth() + 1).padStart(2, '0');
+                const dia = String(m.dateObj.getDate()).padStart(2, '0');
+                const numMovimiento = parseInt(`${anio}${mes}${dia}`, 10);
+
+                return numMovimiento >= numInicio && numMovimiento <= numFin;
+            });
+        }
+
+        let ing = 0, gas = 0;
+        filtrados.forEach(m => {
+            if (m.tipo === 'ingreso') ing += m.monto;
+            else gas += m.monto;
+        });
+
+        const fLocal = (v) => typeof fMXN === 'function' ? fMXN(v) : `$${v.toFixed(2)}`;
+
+        if (document.getElementById('resumen-balance-total')) {
+            document.getElementById('resumen-balance-total').innerText = fLocal(ing - gas);
+        }
+
+        const contLista = document.getElementById('lista-resumen-periodo');
+        if (contLista) {
+            contLista.innerHTML = filtrados.length ? '' : '<p class="opacity-30 text-center py-12 text-xs font-medium uppercase tracking-wider">Sin movimientos registrados en este período.</p>';
+
+            [...filtrados].sort((a, b) => b.dateObj - a.dateObj).forEach(m => {
+                const fechaFormateada = typeof window.formatearFechaMX === 'function' ? window.formatearFechaMX(m.fechaOriginal) : m.dateObj.toLocaleDateString('es-MX');
+
+                const div = document.createElement('div');
+                div.className = "flex justify-between items-center p-3 bg-stone-50/60 rounded-xl border border-white transition hover:bg-stone-50";
+                div.innerHTML = `
+                    <div>
+                        <p class="text-[11px] font-semibold text-stone-800">${m.desc.toUpperCase()}</p>
+                        <p class="text-[9px] text-stone-400 font-medium uppercase mt-0.5">${m.cat} | ${fechaFormateada}</p>
+                    </div>
+                    <span class="text-[11px] font-bold ${m.tipo === 'gasto' ? 'text-rose-500' : 'text-stone-700'}">
+                        ${m.tipo === 'gasto' ? '-' : '+'}${fLocal(m.monto)}
+                    </span>`;
+                contLista.appendChild(div);
+            });
+        }
+
+        const canvasR = document.getElementById('chartResumen');
+        if (canvasR) {
+            const ctx = canvasR.getContext('2d');
+            if (window.chartR) {
+                window.chartR.destroy();
+                window.chartR = null;
+            }
+            window.chartR = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Ingresos', 'Gastos'],
+                    datasets: [{ data: [ing, gas], backgroundColor: ['#D6C7B3', '#45423E'], borderRadius: 6 }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true } }
+                }
+            });
+        }
+    } catch (error) {
+        console.error("Error crítico en actualizarResumen:", error);
+    }
 }
 
 function actualizarSelectsCategorias() {
