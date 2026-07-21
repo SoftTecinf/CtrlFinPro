@@ -329,6 +329,11 @@ function actualizarHome() {
         const hoyStr = ahora.toISOString().split('T')[0]; // "YYYY-MM-DD" del día de hoy
         let balG = 0, balD = 0, ingM = 0, gasM = 0;
 
+        // OBTENEMOS EL PERIODO SELECCIONADO EN LOS FILTROS
+        const filtros = window.AppState?.filtrosActuales || {};
+        const mesFiltro = filtros.mes !== undefined ? filtros.mes : ahora.getMonth();
+        const añoFiltro = filtros.año !== undefined ? filtros.año : ahora.getFullYear();
+
         datos.forEach(m => {
             const val = m.tipo === 'ingreso' ? m.monto : -m.monto;
             balG += val;
@@ -345,8 +350,8 @@ function actualizarHome() {
                 balD += val;
             }
 
-            // Verificación de mes y año actual nativo (Como funcionaba originalmente)
-            if (m.dateObj.getMonth() === ahora.getMonth() && m.dateObj.getFullYear() === ahora.getFullYear()) {
+            // VERIFICACIÓN DINÁMICA USANDO EL MES Y AÑO SELECCIONADOS
+            if (m.dateObj.getMonth() === mesFiltro && m.dateObj.getFullYear() === añoFiltro) {
                 if (m.tipo === 'ingreso') ingM += m.monto;
                 else gasM += m.monto;
             }
