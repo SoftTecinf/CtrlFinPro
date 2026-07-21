@@ -24,9 +24,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     // 0. VALIDACIÓN DE SEGURIDAD (Control de Sesión)
     const sesionActiva = localStorage.getItem('usuarioLogueado');
     if (!sesionActiva) {
-        // Vaciamos el contenido por seguridad y redirigimos de inmediato al login
-        document.body.innerHTML = '';
-        window.location.href = "login.html";
+        // Redirigimos de inmediato al login sin borrar el body para evitar pantallas en blanco
+        window.location.replace("login.html");
         return;
     }
 
