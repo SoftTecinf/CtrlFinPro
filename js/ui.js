@@ -551,13 +551,14 @@ function toggleLoading(show) {
 function inicializarFiltros() {
     const hoy = new Date();
     const añoActual = hoy.getFullYear();
-    const mesActual = String(hoy.getMonth() + 1).padStart(2, '0');
+    const mesActualSistema = hoy.getMonth(); // 0 para Enero, 5 para Junio, 6 para Julio, etc.
+    const mesStr = String(mesActualSistema + 1).padStart(2, '0');
     const diaActual = String(hoy.getDate()).padStart(2, '0');
 
-    const primerDiaMes = `${añoActual}-${mesActual}-01`;
-    const fechaHoySistema = `${añoActual}-${mesActual}-${diaActual}`;
+    const primerDiaMes = `${añoActual}-${mesStr}-01`;
+    const fechaHoySistema = `${añoActual}-${mesStr}-${diaActual}`;
 
-    // 1. Manejo de inputs de fecha (si los hay en tu HTML)
+    // 1. Manejo de inputs de fecha
     const prefijos = ['in', 'ex', 'res', 'an'];
     prefijos.forEach(pref => {
         const inputInicio = document.getElementById(`${pref}-fecha-inicio`);
@@ -573,18 +574,14 @@ function inicializarFiltros() {
     if (!AppState.filtrosActuales.inicio) AppState.filtrosActuales.inicio = primerDiaMes;
     if (!AppState.filtrosActuales.fin) AppState.filtrosActuales.fin = fechaHoySistema;
 
-    // 2. Llenado y sincronización de los selectores de Mes y Año (Meses y Años)
+    // 🔥 FORZAMOS QUE EL MES Y AÑO INICIALES SEAN LOS DEL SISTEMA
+    AppState.filtrosActuales.mes = mesActualSistema;
+    AppState.filtrosActuales.año = añoActual;
+
+    // 2. Llenado y sincronización de los selectores de Mes y Año
     const meses = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
     const idsAnio = ['in-año', 'ex-año', 'res-año'];
     const idsMes = ['in-mes', 'ex-mes', 'res-mes'];
-
-    const estadoFiltros = AppState.filtrosActuales || {};
-    const mesSeleccionado = estadoFiltros.mes !== undefined ? estadoFiltros.mes : hoy.getMonth();
-    const añoSeleccionado = estadoFiltros.año !== undefined ? estadoFiltros.año : añoActual;
-
-    // Guardamos los valores seleccionados por defecto en el estado si no existían
-    if (estadoFiltros.mes === undefined) AppState.filtrosActuales.mes = mesSeleccionado;
-    if (estadoFiltros.año === undefined) AppState.filtrosActuales.año = añoSeleccionado;
 
     [idsMes, idsAnio].forEach((list, idx) => {
         list.forEach(id => {
@@ -598,7 +595,7 @@ function inicializarFiltros() {
                         opt.innerHTML = m;
                         sel.appendChild(opt);
                     });
-                    sel.value = mesSeleccionado;
+                    sel.value = mesActualSistema; // Apunta al mes actual del sistema
                 } else {
                     for (let i = añoActual; i >= añoActual - 4; i--) {
                         let opt = document.createElement('option');
@@ -606,7 +603,7 @@ function inicializarFiltros() {
                         opt.innerHTML = i;
                         sel.appendChild(opt);
                     }
-                    sel.value = añoSeleccionado;
+                    sel.value = añoActual; // Apunta al año actual del sistema
                 }
 
                 // Escuchador dinámico directo para los selectores de mes y año
@@ -615,14 +612,12 @@ function inicializarFiltros() {
                     sel.addEventListener('change', () => {
                         if (!AppState.filtrosActuales) AppState.filtrosActuales = {};
 
-                        // Actualizamos el estado global según el selector modificado
                         if (sel.id.includes('mes')) {
                             AppState.filtrosActuales.mes = parseInt(sel.value, 10);
                         } else if (sel.id.includes('año')) {
                             AppState.filtrosActuales.año = parseInt(sel.value, 10);
                         }
 
-                        // Refrescamos la vista activa
                         if (typeof refrescarVistaActual === 'function') {
                             refrescarVistaActual();
                         } else if (typeof actualizarResumen === 'function') {
