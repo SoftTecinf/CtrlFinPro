@@ -557,9 +557,8 @@ function inicializarFiltros() {
     const primerDiaMes = `${añoActual}-${mesActual}-01`;
     const fechaHoySistema = `${añoActual}-${mesActual}-${diaActual}`;
 
-    // 🔥 INCLUIMOS 'an' AQUÍ PARA QUE LOS DETECTE DE INMEDIATO
+    // 1. Manejo de inputs de fecha (si los hay en tu HTML)
     const prefijos = ['in', 'ex', 'res', 'an'];
-
     prefijos.forEach(pref => {
         const inputInicio = document.getElementById(`${pref}-fecha-inicio`);
         const inputFin = document.getElementById(`${pref}-fecha-fin`);
@@ -574,23 +573,81 @@ function inicializarFiltros() {
     if (!AppState.filtrosActuales.inicio) AppState.filtrosActuales.inicio = primerDiaMes;
     if (!AppState.filtrosActuales.fin) AppState.filtrosActuales.fin = fechaHoySistema;
 
-    // --- ESCUCHADOR GENERAL PARA TODOS LOS INPUTS DE FECHA ---
+    // 2. Llenado y sincronización de los selectores de Mes y Año (Meses y Años)
+    const meses = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+    const idsAnio = ['in-año', 'ex-año', 'res-año'];
+    const idsMes = ['in-mes', 'ex-mes', 'res-mes'];
+
+    const estadoFiltros = AppState.filtrosActuales || {};
+    const mesSeleccionado = estadoFiltros.mes !== undefined ? estadoFiltros.mes : hoy.getMonth();
+    const añoSeleccionado = estadoFiltros.año !== undefined ? estadoFiltros.año : añoActual;
+
+    // Guardamos los valores seleccionados por defecto en el estado si no existían
+    if (estadoFiltros.mes === undefined) AppState.filtrosActuales.mes = mesSeleccionado;
+    if (estadoFiltros.año === undefined) AppState.filtrosActuales.año = añoSeleccionado;
+
+    [idsMes, idsAnio].forEach((list, idx) => {
+        list.forEach(id => {
+            const sel = document.getElementById(id);
+            if (sel) {
+                sel.innerHTML = '';
+                if (idx === 0) {
+                    meses.forEach((m, i) => {
+                        let opt = document.createElement('option');
+                        opt.value = i;
+                        opt.innerHTML = m;
+                        sel.appendChild(opt);
+                    });
+                    sel.value = mesSeleccionado;
+                } else {
+                    for (let i = añoActual; i >= añoActual - 4; i--) {
+                        let opt = document.createElement('option');
+                        opt.value = i;
+                        opt.innerHTML = i;
+                        sel.appendChild(opt);
+                    }
+                    sel.value = añoSeleccionado;
+                }
+
+                // Escuchador dinámico directo para los selectores de mes y año
+                if (!sel.dataset.escuchadorActivo) {
+                    sel.dataset.escuchadorActivo = "true";
+                    sel.addEventListener('change', () => {
+                        if (!AppState.filtrosActuales) AppState.filtrosActuales = {};
+
+                        // Actualizamos el estado global según el selector modificado
+                        if (sel.id.includes('mes')) {
+                            AppState.filtrosActuales.mes = parseInt(sel.value, 10);
+                        } else if (sel.id.includes('año')) {
+                            AppState.filtrosActuales.año = parseInt(sel.value, 10);
+                        }
+
+                        // Refrescamos la vista activa
+                        if (typeof refrescarVistaActual === 'function') {
+                            refrescarVistaActual();
+                        } else if (typeof actualizarResumen === 'function') {
+                            actualizarResumen();
+                        }
+                    });
+                }
+            }
+        });
+    });
+
+    // 3. --- ESCUCHADOR GENERAL PARA TODOS LOS INPUTS DE FECHA ---
     document.querySelectorAll('input[type="date"]').forEach(input => {
-        // Evitamos duplicar escuchadores si la función se ejecuta varias veces
         if (input.dataset.escuchadorActivo) return;
         input.dataset.escuchadorActivo = "true";
 
         input.addEventListener('change', () => {
             if (!AppState.filtrosActuales) AppState.filtrosActuales = {};
 
-            // Sincronizamos el valor con AppState sin importar si es 'in', 'ex' o 'an'
             if (input.id.includes('inicio')) {
                 AppState.filtrosActuales.inicio = input.value;
             } else if (input.id.includes('fin')) {
                 AppState.filtrosActuales.fin = input.value;
             }
 
-            // Refrescamos la vista activa
             if (typeof refrescarVistaActual === 'function') {
                 refrescarVistaActual();
             } else if (typeof actualizarResumen === 'function') {
