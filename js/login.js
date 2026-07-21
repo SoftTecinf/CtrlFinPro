@@ -70,10 +70,19 @@ var AuthModule = {
 // Lo registramos en la ventana global
 window.AuthModule = AuthModule;
 
-// 2. Y al final colocas el escuchador
+// ========================================================
+// INICIALIZACIÓN DEL MÓDULO DE LOGIN
+// ========================================================
 document.addEventListener('DOMContentLoaded', function () {
-    var btn = document.getElementById('btn-toggle-pass');
-    if (btn) {
-        btn.addEventListener('click', AuthModule.togglePasswordVisibility);
+    // 1. Vincular el botón para mostrar u ocultar la contraseña
+    var btnToggle = document.getElementById('btn-toggle-pass');
+    if (btnToggle) {
+        btnToggle.addEventListener('click', AuthModule.togglePasswordVisibility);
+    }
+
+    // 2. Vincular el formulario de inicio de sesión para que ejecute la validación al enviar
+    var loginForm = document.getElementById('login-form'); // Asegúrate que tu <form> tenga este id en el HTML
+    if (loginForm) {
+        loginForm.addEventListener('submit', AuthModule.ejecutarLogin);
     }
 });
