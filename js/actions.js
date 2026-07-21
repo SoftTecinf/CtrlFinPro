@@ -384,12 +384,13 @@ window.addEventListener('load', () => {
 
 // --- CONTROL DE SESIÓN ---
 function cerrarSesion() {
+    localStorage.removeItem('isLoggedIn');
     localStorage.removeItem('session_user');
     localStorage.removeItem('session_userName');
-    localStorage.removeItem('isLoggedIn');
-    window.location.href = "./login.html";
+    localStorage.removeItem('ultima_seccion');
+    
+    window.location.replace("./login.html");
 }
-
 function obtenerPeriodoActual() {
     // Detecta la sección activa del estado global seguro
     const seccion = window.AppState?.seccionActual || 'home';
