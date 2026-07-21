@@ -22,11 +22,16 @@ var AuthModule = {
     },
 
    ejecutarLogin: async function () {
+        // Evitamos múltiples ejecuciones simultáneas
+        if (window._loginEnProceso) return;
+        window._loginEnProceso = true;
+
         var usuario = document.getElementById('login-user').value;
         var password = document.getElementById('login-pass').value;
 
         if (!usuario || !password) {
             alert("Por favor llena todos los campos.");
+            window._loginEnProceso = false;
             return;
         }
 
@@ -47,10 +52,12 @@ var AuthModule = {
             } else {
                 var msg = res && res.message ? res.message : "Usuario o contraseña incorrectos.";
                 alert(msg);
+                window._loginEnProceso = false;
             }
         } catch (err) {
             console.error("Error atrapado en el login:", err);
             alert("Error al conectar con el servidor. Revisa la consola.");
+            window._loginEnProceso = false;
         }
     }
 };
