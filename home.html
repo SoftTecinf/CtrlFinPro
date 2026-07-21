@@ -1,23 +1,55 @@
 <section id="sec-home">
+    <!-- 📅 FILTRO DE PERIODO PARA EL HOME -->
+    <div class="flex flex-wrap gap-3 items-center justify-between mb-8 bg-white p-4 rounded-xl-custom soft-shadow border border-[#E5DDD3]">
+        <div class="flex items-center gap-2">
+            <span class="text-xs uppercase tracking-wider opacity-60 font-bold text-[#8C7E6A]">Periodo del Resumen:</span>
+        </div>
+        <div class="flex gap-2">
+            <!-- Selector de Mes -->
+            <select id="res-mes" onchange="refrescarVistaActual()" class="bg-[#F5F2EB] border border-[#E5DDD3] text-[#45423E] text-xs rounded-xl px-3 py-2 outline-none font-medium focus:ring-2 focus:ring-[#8C7E6A]">
+                <option value="0">Enero</option>
+                <option value="1">Febrero</option>
+                <option value="2">Marzo</option>
+                <option value="3">Abril</option>
+                <option value="4">Mayo</option>
+                <option value="5">Junio</option>
+                <option value="6">Julio</option>
+                <option value="7">Agosto</option>
+                <option value="8">Septiembre</option>
+                <option value="9">Octubre</option>
+                <option value="10">Noviembre</option>
+                <option value="11">Diciembre</option>
+            </select>
+
+            <!-- Selector de Año -->
+            <select id="res-año" onchange="refrescarVistaActual()" class="bg-[#F5F2EB] border border-[#E5DDD3] text-[#45423E] text-xs rounded-xl px-3 py-2 outline-none font-medium focus:ring-2 focus:ring-[#8C7E6A]">
+                <option value="2026">2026</option>
+                <option value="2025">2025</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- TARJETAS DE RESUMEN -->
     <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-10">
         <div class="balance-highlight p-6 rounded-xl-custom soft-shadow border border-[#E5DDD3]">
             <span class="text-[10px] uppercase tracking-wider opacity-60 font-bold">Patrimonio Total</span>
             <h2 id="balance-general" class="text-2xl font-bold mt-1 text-[#8C7E6A]">$0.00</h2>
         </div>
-        <div class="bg-white p-6 rounded-xl-custom soft-shadow"><span
-                class="text-[10px] uppercase tracking-wider opacity-60 font-bold italic">Hoy</span>
+        <div class="bg-white p-6 rounded-xl-custom soft-shadow">
+            <span class="text-[10px] uppercase tracking-wider opacity-60 font-bold italic">Hoy</span>
             <h2 id="balance-dia" class="text-2xl font-bold mt-1 text-stone-600">$0.00</h2>
         </div>
-        <div class="bg-white p-6 rounded-xl-custom soft-shadow"><span
-                class="text-[10px] uppercase tracking-wider opacity-60 font-bold">Ingresos Mes</span>
+        <div class="bg-white p-6 rounded-xl-custom soft-shadow">
+            <span class="text-[10px] uppercase tracking-wider opacity-60 font-bold">Ingresos Mes</span>
             <h2 id="home-ingresos" class="text-2xl font-bold mt-1 text-stone-500">$0.00</h2>
         </div>
-        <div class="bg-white p-6 rounded-xl-custom soft-shadow"><span
-                class="text-[10px] uppercase tracking-wider opacity-60 text-rose-300 font-bold">Gastos
-                Mes</span>
+        <div class="bg-white p-6 rounded-xl-custom soft-shadow">
+            <span class="text-[10px] uppercase tracking-wider opacity-60 text-rose-300 font-bold">Gastos Mes</span>
             <h2 id="home-gastos" class="text-2xl font-bold mt-1">$0.00</h2>
         </div>
     </div>
+
+    <!-- GRÁFICO Y MOVIMIENTOS RECIENTES -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <div class="bg-white p-8 rounded-xl-custom soft-shadow text-center">
             <h3 class="text-lg font-semibold mb-6 italic">Distribución Mensual</h3>
