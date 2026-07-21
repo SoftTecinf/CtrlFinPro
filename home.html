@@ -1,18 +1,15 @@
 <section id="sec-home">
     <!-- 📅 FILTRO DE PERIODO PARA EL HOME -->
-    <div
-        class="flex flex-wrap gap-3 items-center justify-between mb-8 bg-white p-4 rounded-xl-custom soft-shadow border border-[#E5DDD3]">
-        <div class="flex items-center gap-2">
-            <span class="text-xs uppercase tracking-wider opacity-60 font-bold text-[#8C7E6A]">Periodo del
-                Resumen:</span>
-        </div>
-        <div class="flex gap-2">
-            <div class="toolbar-group">
-                <select id="ex-mes" onchange="refrescarVistaActual()"
-                    class="bg-white px-3 py-2 rounded-lg text-[10px] font-bold shadow-sm border-none"></select>
-                <select id="ex-año" onchange="refrescarVistaActual()"
-                    class="bg-white px-3 py-2 rounded-lg text-[10px] font-bold shadow-sm border-none"></select>
-            </div>
+    <div class="flex items-center gap-2">
+        <span class="text-xs uppercase tracking-wider opacity-60 font-bold text-[#8C7E6A]">Periodo del
+            Resumen:</span>
+    </div>
+    <div class="flex gap-2">
+        <div class="toolbar-group">
+            <select id="ex-mes" onchange="refrescarVistaActual()"
+                class="bg-white px-3 py-2 rounded-lg text-[10px] font-bold shadow-sm border-none"></select>
+            <select id="ex-año" onchange="refrescarVistaActual()"
+                class="bg-white px-3 py-2 rounded-lg text-[10px] font-bold shadow-sm border-none"></select>
         </div>
     </div>
 
