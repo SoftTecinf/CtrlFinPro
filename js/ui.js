@@ -1,4 +1,6 @@
+// ==========================================
 // --- RENDERIZADOS LOCALES ---
+// ==========================================
 function actualizarListadoIndividual(tipo, contId, countId) {
     const todosLosMovimientos = AppState.movimientos || [];
     const tipoNormalizado = tipo.toLowerCase().trim();
@@ -22,7 +24,7 @@ function actualizarListadoIndividual(tipo, contId, countId) {
     const fechaInicioStr = inputInicio ? inputInicio.value : defectoInicio;
     const fechaFinStr = inputFin ? inputFin.value : defectoFin;
 
-    // Convertimos los límites del filtro a milisegundos para comparar matemáticamente (más seguro que strings)
+    // Convertimos los límites del filtro a milisegundos para comparar matemáticamente
     const inicioTime = new Date(fechaInicioStr + 'T00:00:00').getTime();
     const finTime = new Date(fechaFinStr + 'T23:59:59').getTime();
 
@@ -93,18 +95,14 @@ function actualizarSelectsCategorias() {
     const listaCategorias = window.AppState?.categorias || [];
 
     if (inSel) {
-        // 1. Ponemos la opción por defecto obligatoria para ingresos
         inSel.innerHTML = `<option value="SELECCIONAR CATEGORIA" disabled selected>SELECCIONAR CATEGORÍA</option>`;
-
         listaCategorias.filter(c => c.tipo === 'ingreso').forEach(c => {
             inSel.innerHTML += `<option value="${c.nombre}">${c.nombre.toUpperCase()}</option>`;
         });
     }
 
     if (exSel) {
-        // 2. Ponemos la opción por defecto obligatoria para gastos
         exSel.innerHTML = `<option value="SELECCIONAR CATEGORIA" disabled selected>SELECCIONAR CATEGORÍA</option>`;
-
         listaCategorias.filter(c => c.tipo === 'gasto').forEach(c => {
             exSel.innerHTML += `<option value="${c.nombre}">${c.nombre.toUpperCase()}</option>`;
         });
@@ -142,7 +140,6 @@ function renderCategoriasConfig() {
     });
 }
 
-// Asegúrate de que esta variable sea global en tu archivo
 function editMode(id, active) {
     const viewEl = document.getElementById(`view-${id}`);
     const editEl = document.getElementById(`edit-${id}`);
@@ -164,7 +161,6 @@ async function saveEdit(id) {
         const nuevoNombre = inputEl.value.trim().toUpperCase();
         if (!nuevoNombre || !window.AppState) return;
 
-        // 1. COMPARACIÓN SEGURA: Convertimos ambos a String para evitar fallos de Tipo
         const index = window.AppState.categorias.findIndex(c => String(c.id) === String(id));
 
         if (index !== -1) {
@@ -175,7 +171,6 @@ async function saveEdit(id) {
                 return;
             }
 
-            // 🛑 2. NUEVA VALIDACIÓN: Comprobar si existen movimientos con esta categoría
             const tieneMovimientosAsociados = window.AppState.movimientos && window.AppState.movimientos.some(m => {
                 if (!m) return false;
                 const catMov = (m.cat || m.categoria || "").trim().toUpperCase();
@@ -188,11 +183,9 @@ async function saveEdit(id) {
                 return;
             }
 
-            // 3. Actualizar el nombre en el catálogo de categorías local si pasó la validación
             window.AppState.categorias[index].nombre = nuevoNombre;
             localStorage.setItem('cats_mxn', JSON.stringify(window.AppState.categorias));
 
-            // 4. 🔥 SINCRONIZACIÓN CON GOOGLE SHEETS
             try {
                 const response = await fetch(API_URL, {
                     method: 'POST',
@@ -212,12 +205,10 @@ async function saveEdit(id) {
                 console.error("❌ Error de red al sincronizar con Google Sheets:", error);
             }
 
-            // 5. Restablecer la variable global de edición para que regresen los botones principales
             if (typeof editandoId !== 'undefined') {
                 editandoId = null;
             }
 
-            // 6. Forzar el redibujado inmediato y seguro de la UI y los ajustes
             if (typeof abrirVistaAjustesInteligente === 'function') abrirVistaAjustesInteligente();
             if (typeof actualizarHome === 'function') actualizarHome();
             if (typeof actualizarResumen === 'function') actualizarResumen();
@@ -234,7 +225,6 @@ async function saveEdit(id) {
 }
 
 async function actualizarCategoriaEnNube(id, nuevoNombre) {
-    // Reemplaza esta URL con la URL de implementación web de tu Google Apps Script
     const URL_APPS_SCRIPT = "https://script.google.com/macros/s/AKfycbzvR903lBMnhRitzGVTj6E1XnIukpaOI7UZZM540_LX9Hdo7maew-vKKK-s_jDs7OGLvQ/exec";
 
     try {
@@ -258,6 +248,7 @@ async function actualizarCategoriaEnNube(id, nuevoNombre) {
         console.error("❌ Error de red al intentar actualizar en Google Sheets:", error);
     }
 }
+
 // Variables globales seguras para los gráficos
 window.chartH = window.chartH || null;
 window.chartR = window.chartR || null;
@@ -268,16 +259,11 @@ window.chartR = window.chartR || null;
 function normalizarMovimiento(m) {
     if (!m) return null;
 
-    // Guardamos una copia exacta del dato de fecha original para tus formateadores de la app
     const fechaOriginal = m.fecha;
-
-    // Crear un objeto Date nativo seguro para cálculos numéricos e internos
     let dateObj = null;
     if (m.fecha) {
         dateObj = new Date(m.fecha);
 
-        // Si el formato viene como texto es-MX "DD/MM/YYYY", new Date() podría fallar.
-        // Agregamos un salvavidas para reconstruirla limpiamente si contiene diagonales:
         if (isNaN(dateObj.getTime()) && typeof m.fecha === 'string') {
             const partesFecha = m.fecha.split('/');
             if (partesFecha.length === 3) {
@@ -289,7 +275,6 @@ function normalizarMovimiento(m) {
         }
     }
 
-    // Si la fecha sigue siendo inválida o no existía, usamos la fecha de hoy por defecto
     if (!dateObj || isNaN(dateObj.getTime())) {
         dateObj = new Date();
     }
@@ -300,8 +285,8 @@ function normalizarMovimiento(m) {
         tipo: m.tipo === 'ingreso' ? 'ingreso' : 'gasto',
         desc: (m.desc || m.concepto || "Sin concepto").trim(),
         cat: (m.cat || m.categoria || "Varios").trim(),
-        fechaOriginal: fechaOriginal, // Mandamos la original sin alterar a la UI
-        dateObj: dateObj              // Mandamos el objeto nativo para los cálculos
+        fechaOriginal: fechaOriginal,
+        dateObj: dateObj            
     };
 }
 
@@ -320,14 +305,13 @@ function actualizarHome() {
         const datos = rawDatos.map(normalizarMovimiento).filter(Boolean);
 
         const ahora = new Date();
-        const hoyStr = ahora.toISOString().split('T')[0]; // "YYYY-MM-DD" del día de hoy
+        const hoyStr = ahora.toISOString().split('T')[0];
         let balG = 0, balD = 0, ingM = 0, gasM = 0;
 
         datos.forEach(m => {
             const val = m.tipo === 'ingreso' ? m.monto : -m.monto;
             balG += val;
 
-            // Verificación del día de hoy usando el objeto nativo de manera segura
             let mFechaStr = "";
             try {
                 mFechaStr = m.dateObj.toISOString().split('T')[0];
@@ -339,7 +323,6 @@ function actualizarHome() {
                 balD += val;
             }
 
-            // Verificación de mes y año actual nativo (Como funcionaba originalmente)
             if (m.dateObj.getMonth() === ahora.getMonth() && m.dateObj.getFullYear() === ahora.getFullYear()) {
                 if (m.tipo === 'ingreso') ingM += m.monto;
                 else gasM += m.monto;
@@ -355,9 +338,6 @@ function actualizarHome() {
 
         window.EstadoFinanciero = { ingresos: ingM, gastos: gasM };
 
-        // ==========================================
-        // 3. Render del gráfico Donut (ACTUALIZACIÓN INTELIGENTE)
-        // ==========================================
         const canvasH = document.getElementById('chartHome');
         if (canvasH) {
             const chartExistente = Chart.getChart(canvasH);
@@ -366,12 +346,10 @@ function actualizarHome() {
             const colorsDonut = hayDatos ? ['#D6C7B3', '#45423E'] : ['#E5E7EB', '#E5E7EB'];
 
             if (chartExistente) {
-                // Si el gráfico ya existe, solo actualizamos los datos y colores
                 chartExistente.data.datasets[0].data = dataDonut;
                 chartExistente.data.datasets[0].backgroundColor = colorsDonut;
-                chartExistente.update(); // Esto cambia los datos sin parpadear
+                chartExistente.update();
             } else {
-                // Si es la primera vez que carga, creamos el gráfico
                 const ctx = canvasH.getContext('2d');
                 window.chartH = new Chart(ctx, {
                     type: 'doughnut',
@@ -407,7 +385,6 @@ function actualizarHome() {
             }
         }
 
-        // Lista de transacciones recientes reparada
         const listaH = document.getElementById('lista-recientes');
         if (listaH) {
             listaH.innerHTML = '';
@@ -415,7 +392,6 @@ function actualizarHome() {
                 listaH.innerHTML = '<p class="opacity-30 text-center py-6 text-xs uppercase font-medium">Sin movimientos</p>';
             } else {
                 [...datos].reverse().slice(0, 10).forEach(m => {
-                    // Usamos la fecha original exacta para que window.formatearFechaMX no devuelva error
                     const fechaFormateada = typeof window.formatearFechaMX === 'function' ? window.formatearFechaMX(m.fechaOriginal) : m.dateObj.toLocaleDateString('es-MX');
 
                     listaH.innerHTML += `
@@ -438,7 +414,6 @@ function actualizarHome() {
 
 function actualizarResumen() {
     try {
-        // 🎯 APUNTAMOS DIRECTAMENTE A LA FUENTE REAL DE LOS DATOS
         let rawFiltrados = window.AppState?.movimientos || [];
 
         const { inicio, fin } = window.AppState?.filtrosActuales || {};
@@ -477,7 +452,6 @@ function actualizarResumen() {
         if (contLista) {
             contLista.innerHTML = filtrados.length ? '' : '<p class="opacity-30 text-center py-12 text-xs font-medium uppercase tracking-wider">Sin movimientos registrados en este período.</p>';
 
-            // Ordenamos de forma cronológica por el objeto de tiempo nativo
             [...filtrados].sort((a, b) => b.dateObj - a.dateObj).forEach(m => {
                 const fechaFormateada = typeof window.formatearFechaMX === 'function' ? window.formatearFechaMX(m.fechaOriginal) : m.dateObj.toLocaleDateString('es-MX');
 
@@ -536,7 +510,6 @@ function actualizarFechaHeader() {
 
 function toggleLoading(show) {
     const loader = document.getElementById('loading-overlay');
-    // Solo intenta cambiar el estilo si el elemento existe en el HTML actual
     if (loader) {
         loader.style.display = show ? 'flex' : 'none';
     }
@@ -551,7 +524,6 @@ function inicializarFiltros() {
     const primerDiaMes = `${añoActual}-${mesActual}-01`;
     const fechaHoySistema = `${añoActual}-${mesActual}-${diaActual}`;
 
-    // 🔥 INCLUIMOS 'an' AQUÍ PARA QUE LOS DETECTE DE INMEDIATO
     const prefijos = ['in', 'ex', 'res', 'an'];
 
     prefijos.forEach(pref => {
@@ -568,23 +540,19 @@ function inicializarFiltros() {
     if (!AppState.filtrosActuales.inicio) AppState.filtrosActuales.inicio = primerDiaMes;
     if (!AppState.filtrosActuales.fin) AppState.filtrosActuales.fin = fechaHoySistema;
 
-    // --- ESCUCHADOR GENERAL PARA TODOS LOS INPUTS DE FECHA ---
     document.querySelectorAll('input[type="date"]').forEach(input => {
-        // Evitamos duplicar escuchadores si la función se ejecuta varias veces
         if (input.dataset.escuchadorActivo) return;
         input.dataset.escuchadorActivo = "true";
 
         input.addEventListener('change', () => {
             if (!AppState.filtrosActuales) AppState.filtrosActuales = {};
 
-            // Sincronizamos el valor con AppState sin importar si es 'in', 'ex' o 'an'
             if (input.id.includes('inicio')) {
                 AppState.filtrosActuales.inicio = input.value;
             } else if (input.id.includes('fin')) {
                 AppState.filtrosActuales.fin = input.value;
             }
 
-            // Refrescamos la vista activa
             if (typeof refrescarVistaActual === 'function') {
                 refrescarVistaActual();
             } else if (typeof actualizarResumen === 'function') {
@@ -601,8 +569,6 @@ function formatCurrency(input, hiddenId) {
     input.value = numericValue.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' }) + " MXN";
 }
 
-// Función de seguridad para actualizar elementos
-// Agrega esto a tu ui.js junto a safeSetText
 function safeSetHTML(id, htmlContent) {
     const el = document.getElementById(id);
     if (el) {
@@ -610,9 +576,8 @@ function safeSetHTML(id, htmlContent) {
     }
 }
 
-// --- CONTROLADOR INTELIGENTE DE VISTAS ---
 async function abrirVistaAjustesInteligente() {
-    toggleLoading(true); // Siempre muestra carga antes de la lógica
+    toggleLoading(true);
     try {
         if (!AppState.categorias || AppState.categorias.length === 0) {
             const formData = new FormData();
@@ -625,6 +590,6 @@ async function abrirVistaAjustesInteligente() {
         console.error("Error al cargar categorías:", error);
     } finally {
         toggleLoading(false);
-        renderCategoriasConfig(); // SE EJECUTA SIEMPRE, haya datos o error
+        renderCategoriasConfig();
     }
 }
