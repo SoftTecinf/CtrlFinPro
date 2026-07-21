@@ -2,7 +2,13 @@
 // --- RENDERIZADOS LOCALES ---
 // ==========================================
 function actualizarListadoIndividual(tipo, contId, countId) {
-    const todosLosMovimientos = AppState.movimientos || [];
+    // 🛠️ Blindaje para extraer correctamente el arreglo plano de movimientos
+    let rawMovs = AppState.movimientos || [];
+    if (!Array.isArray(rawMovs) && typeof rawMovs === 'object') {
+        rawMovs = rawMovs.movimientos || Object.values(rawMovs);
+    }
+    const todosLosMovimientos = Array.isArray(rawMovs) ? rawMovs : [];
+
     const tipoNormalizado = tipo.toLowerCase().trim();
 
     const pref = tipoNormalizado === 'ingreso' ? 'in' : 'ex';
@@ -49,7 +55,7 @@ function actualizarListadoIndividual(tipo, contId, countId) {
 
     // Renderizamos en el contenedor correcto
     const realContId = tipoNormalizado === 'ingreso' ? 'lista-ingresos' : 'lista-gastos';
-    const cont = document.getElementById(realContId) || document.getElementById(contId);
+    const cont = document.getElementById(realContId) || document.getElementById(countId);
 
     if (!cont) return;
 
