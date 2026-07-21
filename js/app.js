@@ -342,6 +342,27 @@ function refrescarVistaActual() {
     });
 }
 
+function cambiarFiltroPeriodo() {
+    // 1. Obtenemos los valores actuales de los selectores activos en la interfaz
+    const seccion = window.AppState?.seccionActual || 'home';
+    let pref = seccion === 'ingresos' ? 'in' : (seccion === 'gastos' ? 'ex' : 'res');
+
+    const mesEl = document.getElementById(`${pref}-mes`);
+    const anioEl = document.getElementById(`${pref}-año`);
+
+    if (mesEl && anioEl) {
+        // 2. Actualizamos el estado global que usan tus funciones de filtrado
+        window.AppState.filtrosActuales.mes = parseInt(mesEl.value, 10);
+        window.AppState.filtrosActuales.año = parseInt(anioEl.value, 10);
+
+        // 3. Guardamos el estado en el caché para que persista
+        localStorage.setItem('financiero_state', JSON.stringify(window.AppState));
+    }
+
+    // 4. Refrescamos la interfaz para que dibuje los datos del nuevo mes (Junio, etc.)
+    refrescarVistaActual();
+}
+
 window.obtenerMovimientosFiltrados = function() {
     console.warn("¡Entró a obtenerMovimientosFiltrados!");
     const movimientos = window.AppState?.movimientos || [];
