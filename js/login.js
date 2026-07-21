@@ -13,12 +13,12 @@ var AuthModule = {
 
         if (passInput.type === 'password') {
             passInput.type = 'text';
-            eyeOpen.style.display = 'none';
-            eyeClosed.style.display = 'block';
+            if (eyeOpen) eyeOpen.style.display = 'none';
+            if (eyeClosed) eyeClosed.style.display = 'block';
         } else {
             passInput.type = 'password';
-            eyeOpen.style.display = 'block';
-            eyeClosed.style.display = 'none';
+            if (eyeOpen) eyeOpen.style.display = 'block';
+            if (eyeClosed) eyeClosed.style.display = 'none';
         }
     },
 
@@ -43,15 +43,14 @@ var AuthModule = {
                 localStorage.setItem('session_userName', res.userName || "Usuario");
                 localStorage.setItem('isLoggedIn', 'true');
 
-                // 🔥 AQUÍ SE CUMPLE TU REGLA AL 100%:
                 // Forzamos que la sección inicial sea 'home' obligatoriamente tras iniciar sesión
                 localStorage.setItem('ultima_seccion', 'home');
 
-                // ¡DESBLOQUEAMOS LA REDIRECCIÓN!
+                // Redirección
                 window.location.href = "./index.html";
             } else {
                 var msg = res && res.message ? res.message : "Usuario o contraseña incorrectos.";
-                var errorLabel = document.getElementById('error-label');
+                var errorLabel = document.getElementById('login-error');
 
                 if (errorLabel) {
                     errorLabel.innerText = msg;
@@ -71,9 +70,19 @@ var AuthModule = {
 window.AuthModule = AuthModule;
 
 // ========================================================
-// INICIALIZACIÓN DEL MÓDULO DE LOGIN
+// INICIALIZACIÓN Y QUITADO DE CARGA
 // ========================================================
 document.addEventListener("DOMContentLoaded", () => {
+    // 1. Ocultar el overlay de carga de forma inmediata al cargar el DOM
     const overlay = document.getElementById('loading-overlay');
-    if (overlay) overlay.style.display = 'none';
+    if (overlay) {
+        overlay.style.opacity = '0';
+        setTimeout(() => overlay.remove(), 300);
+    }
+
+    // 2. Vincular el botón del ojo para ver/ocultar contraseña
+    var btnToggle = document.getElementById('btn-toggle-pass');
+    if (btnToggle) {
+        btnToggle.addEventListener('click', AuthModule.togglePasswordVisibility);
+    }
 });
