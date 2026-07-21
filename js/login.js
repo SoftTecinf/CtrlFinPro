@@ -73,16 +73,7 @@ window.AuthModule = AuthModule;
 // ========================================================
 // INICIALIZACIÓN DEL MÓDULO DE LOGIN
 // ========================================================
-document.addEventListener('DOMContentLoaded', function () {
-    // 1. Vincular el botón para mostrar u ocultar la contraseña
-    var btnToggle = document.getElementById('btn-toggle-pass');
-    if (btnToggle) {
-        btnToggle.addEventListener('click', AuthModule.togglePasswordVisibility);
-    }
-
-    // 2. Vincular el formulario de inicio de sesión para que ejecute la validación al enviar
-    var loginForm = document.getElementById('login-form'); // Asegúrate que tu <form> tenga este id en el HTML
-    if (loginForm) {
-        loginForm.addEventListener('submit', AuthModule.ejecutarLogin);
-    }
+document.addEventListener("DOMContentLoaded", () => {
+    const overlay = document.getElementById('loading-overlay');
+    if (overlay) overlay.style.display = 'none';
 });
