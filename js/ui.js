@@ -1,8 +1,12 @@
-// ==========================================
 // --- RENDERIZADOS LOCALES ---
-// ==========================================
 function actualizarListadoIndividual(tipo, contId, countId) {
-    const todosLosMovimientos = obtenerMovimientosPlanos();
+    // 🛡️ Extractor seguro: asegura que siempre obtengamos un arreglo plano sin importar cómo venga el estado
+    let rawMovs = AppState.movimientos || [];
+    if (!Array.isArray(rawMovs) && typeof rawMovs === 'object') {
+        rawMovs = rawMovs.movimientos || Object.values(rawMovs);
+    }
+    const todosLosMovimientos = Array.isArray(rawMovs) ? rawMovs : [];
+
     const tipoNormalizado = tipo.toLowerCase().trim();
 
     const pref = tipoNormalizado === 'ingreso' ? 'in' : 'ex';
@@ -24,25 +28,30 @@ function actualizarListadoIndividual(tipo, contId, countId) {
     const fechaInicioStr = inputInicio ? inputInicio.value : defectoInicio;
     const fechaFinStr = inputFin ? inputFin.value : defectoFin;
 
+    // Convertimos los límites del filtro a milisegundos para comparar matemáticamente (más seguro que strings)
     const inicioTime = new Date(fechaInicioStr + 'T00:00:00').getTime();
     const finTime = new Date(fechaFinStr + 'T23:59:59').getTime();
 
+    // Filtramos validando tipo y rango de tiempo exacto
     const filtrados = todosLosMovimientos.filter(m => {
         if (!m.fecha) return false;
 
         const tipoMov = (m.tipo || '').toLowerCase().trim();
         if (tipoMov !== tipoNormalizado) return false;
 
+        // Convertimos la fecha del movimiento a timestamp
         const movTime = new Date(m.fecha).getTime();
         if (isNaN(movTime)) return false;
 
         return movTime >= inicioTime && movTime <= finTime;
     }).reverse();
 
+    // Actualizamos el contador
     const realCountId = tipoNormalizado === 'ingreso' ? 'count-in' : 'count-ex';
     const countEl = document.getElementById(realCountId) || document.getElementById(countId);
     if (countEl) countEl.innerText = `${filtrados.length} MOVIMIENTOS`;
 
+    // Renderizamos en el contenedor correcto
     const realContId = tipoNormalizado === 'ingreso' ? 'lista-ingresos' : 'lista-gastos';
     const cont = document.getElementById(realContId) || document.getElementById(countId);
 
@@ -84,101 +93,24 @@ function actualizarListadoIndividual(tipo, contId, countId) {
     cont.innerHTML = htmlAcumulado;
 }
 
-function actualizarResumen() {
-    try {
-        let rawFiltrados = obtenerMovimientosPlanos();
-        const { inicio, fin } = window.AppState?.filtrosActuales || {};
-        let filtrados = rawFiltrados.map(normalizarMovimiento).filter(Boolean);
-
-        if (inicio && fin) {
-            const numInicio = parseInt(inicio.replace(/-/g, ''), 10);
-            const numFin = parseInt(fin.replace(/-/g, ''), 10);
-
-            filtrados = filtrados.filter(m => {
-                if (!m.dateObj || isNaN(m.dateObj.getTime())) return false;
-
-                const anio = m.dateObj.getFullYear();
-                const mes = String(m.dateObj.getMonth() + 1).padStart(2, '0');
-                const dia = String(m.dateObj.getDate()).padStart(2, '0');
-                const numMovimiento = parseInt(`${anio}${mes}${dia}`, 10);
-
-                return numMovimiento >= numInicio && numMovimiento <= numFin;
-            });
-        }
-
-        let ing = 0, gas = 0;
-        filtrados.forEach(m => {
-            if (m.tipo === 'ingreso') ing += m.monto;
-            else gas += m.monto;
-        });
-
-        const fLocal = (v) => typeof fMXN === 'function' ? fMXN(v) : `$${v.toFixed(2)}`;
-
-        if (document.getElementById('resumen-balance-total')) {
-            document.getElementById('resumen-balance-total').innerText = fLocal(ing - gas);
-        }
-
-        const contLista = document.getElementById('lista-resumen-periodo');
-        if (contLista) {
-            contLista.innerHTML = filtrados.length ? '' : '<p class="opacity-30 text-center py-12 text-xs font-medium uppercase tracking-wider">Sin movimientos registrados en este período.</p>';
-
-            [...filtrados].sort((a, b) => b.dateObj - a.dateObj).forEach(m => {
-                const fechaFormateada = typeof window.formatearFechaMX === 'function' ? window.formatearFechaMX(m.fechaOriginal) : m.dateObj.toLocaleDateString('es-MX');
-
-                const div = document.createElement('div');
-                div.className = "flex justify-between items-center p-3 bg-stone-50/60 rounded-xl border border-white transition hover:bg-stone-50";
-                div.innerHTML = `
-                    <div>
-                        <p class="text-[11px] font-semibold text-stone-800">${m.desc.toUpperCase()}</p>
-                        <p class="text-[9px] text-stone-400 font-medium uppercase mt-0.5">${m.cat} | ${fechaFormateada}</p>
-                    </div>
-                    <span class="text-[11px] font-bold ${m.tipo === 'gasto' ? 'text-rose-500' : 'text-stone-700'}">
-                        ${m.tipo === 'gasto' ? '-' : '+'}${fLocal(m.monto)}
-                    </span>`;
-                contLista.appendChild(div);
-            });
-        }
-
-        const canvasR = document.getElementById('chartResumen');
-        if (canvasR) {
-            const ctx = canvasR.getContext('2d');
-            if (window.chartR) {
-                window.chartR.destroy();
-                window.chartR = null;
-            }
-            window.chartR = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: ['Ingresos', 'Gastos'],
-                    datasets: [{ data: [ing, gas], backgroundColor: ['#D6C7B3', '#45423E'], borderRadius: 6 }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
-                    scales: { y: { beginAtZero: true } }
-                }
-            });
-        }
-    } catch (error) {
-        console.error("Error crítico en actualizarResumen:", error);
-    }
-}
-
 function actualizarSelectsCategorias() {
     const inSel = document.getElementById('in-categoria');
     const exSel = document.getElementById('ex-categoria');
     const listaCategorias = window.AppState?.categorias || [];
 
     if (inSel) {
+        // 1. Ponemos la opción por defecto obligatoria para ingresos
         inSel.innerHTML = `<option value="SELECCIONAR CATEGORIA" disabled selected>SELECCIONAR CATEGORÍA</option>`;
+
         listaCategorias.filter(c => c.tipo === 'ingreso').forEach(c => {
             inSel.innerHTML += `<option value="${c.nombre}">${c.nombre.toUpperCase()}</option>`;
         });
     }
 
     if (exSel) {
+        // 2. Ponemos la opción por defecto obligatoria para gastos
         exSel.innerHTML = `<option value="SELECCIONAR CATEGORIA" disabled selected>SELECCIONAR CATEGORÍA</option>`;
+
         listaCategorias.filter(c => c.tipo === 'gasto').forEach(c => {
             exSel.innerHTML += `<option value="${c.nombre}">${c.nombre.toUpperCase()}</option>`;
         });
@@ -216,6 +148,7 @@ function renderCategoriasConfig() {
     });
 }
 
+// Asegúrate de que esta variable sea global en tu archivo
 function editMode(id, active) {
     const viewEl = document.getElementById(`view-${id}`);
     const editEl = document.getElementById(`edit-${id}`);
@@ -237,6 +170,7 @@ async function saveEdit(id) {
         const nuevoNombre = inputEl.value.trim().toUpperCase();
         if (!nuevoNombre || !window.AppState) return;
 
+        // 1. COMPARACIÓN SEGURA: Convertimos ambos a String para evitar fallos de Tipo
         const index = window.AppState.categorias.findIndex(c => String(c.id) === String(id));
 
         if (index !== -1) {
@@ -247,6 +181,7 @@ async function saveEdit(id) {
                 return;
             }
 
+            // 🛑 2. NUEVA VALIDACIÓN: Comprobar si existen movimientos con esta categoría
             const tieneMovimientosAsociados = window.AppState.movimientos && window.AppState.movimientos.some(m => {
                 if (!m) return false;
                 const catMov = (m.cat || m.categoria || "").trim().toUpperCase();
@@ -259,9 +194,11 @@ async function saveEdit(id) {
                 return;
             }
 
+            // 3. Actualizar el nombre en el catálogo de categorías local si pasó la validación
             window.AppState.categorias[index].nombre = nuevoNombre;
             localStorage.setItem('cats_mxn', JSON.stringify(window.AppState.categorias));
 
+            // 4. 🔥 SINCRONIZACIÓN CON GOOGLE SHEETS
             try {
                 const response = await fetch(API_URL, {
                     method: 'POST',
@@ -281,10 +218,12 @@ async function saveEdit(id) {
                 console.error("❌ Error de red al sincronizar con Google Sheets:", error);
             }
 
+            // 5. Restablecer la variable global de edición para que regresen los botones principales
             if (typeof editandoId !== 'undefined') {
                 editandoId = null;
             }
 
+            // 6. Forzar el redibujado inmediato y seguro de la UI y los ajustes
             if (typeof abrirVistaAjustesInteligente === 'function') abrirVistaAjustesInteligente();
             if (typeof actualizarHome === 'function') actualizarHome();
             if (typeof actualizarResumen === 'function') actualizarResumen();
@@ -301,6 +240,7 @@ async function saveEdit(id) {
 }
 
 async function actualizarCategoriaEnNube(id, nuevoNombre) {
+    // Reemplaza esta URL con la URL de implementación web de tu Google Apps Script
     const URL_APPS_SCRIPT = "https://script.google.com/macros/s/AKfycbzvR903lBMnhRitzGVTj6E1XnIukpaOI7UZZM540_LX9Hdo7maew-vKKK-s_jDs7OGLvQ/exec";
 
     try {
@@ -324,7 +264,6 @@ async function actualizarCategoriaEnNube(id, nuevoNombre) {
         console.error("❌ Error de red al intentar actualizar en Google Sheets:", error);
     }
 }
-
 // Variables globales seguras para los gráficos
 window.chartH = window.chartH || null;
 window.chartR = window.chartR || null;
@@ -335,11 +274,16 @@ window.chartR = window.chartR || null;
 function normalizarMovimiento(m) {
     if (!m) return null;
 
+    // Guardamos una copia exacta del dato de fecha original para tus formateadores de la app
     const fechaOriginal = m.fecha;
+
+    // Crear un objeto Date nativo seguro para cálculos numéricos e internos
     let dateObj = null;
     if (m.fecha) {
         dateObj = new Date(m.fecha);
 
+        // Si el formato viene como texto es-MX "DD/MM/YYYY", new Date() podría fallar.
+        // Agregamos un salvavidas para reconstruirla limpiamente si contiene diagonales:
         if (isNaN(dateObj.getTime()) && typeof m.fecha === 'string') {
             const partesFecha = m.fecha.split('/');
             if (partesFecha.length === 3) {
@@ -351,6 +295,7 @@ function normalizarMovimiento(m) {
         }
     }
 
+    // Si la fecha sigue siendo inválida o no existía, usamos la fecha de hoy por defecto
     if (!dateObj || isNaN(dateObj.getTime())) {
         dateObj = new Date();
     }
@@ -361,8 +306,8 @@ function normalizarMovimiento(m) {
         tipo: m.tipo === 'ingreso' ? 'ingreso' : 'gasto',
         desc: (m.desc || m.concepto || "Sin concepto").trim(),
         cat: (m.cat || m.categoria || "Varios").trim(),
-        fechaOriginal: fechaOriginal,
-        dateObj: dateObj            
+        fechaOriginal: fechaOriginal, // Mandamos la original sin alterar a la UI
+        dateObj: dateObj              // Mandamos el objeto nativo para los cálculos
     };
 }
 
@@ -381,13 +326,14 @@ function actualizarHome() {
         const datos = rawDatos.map(normalizarMovimiento).filter(Boolean);
 
         const ahora = new Date();
-        const hoyStr = ahora.toISOString().split('T')[0];
+        const hoyStr = ahora.toISOString().split('T')[0]; // "YYYY-MM-DD" del día de hoy
         let balG = 0, balD = 0, ingM = 0, gasM = 0;
 
         datos.forEach(m => {
             const val = m.tipo === 'ingreso' ? m.monto : -m.monto;
             balG += val;
 
+            // Verificación del día de hoy usando el objeto nativo de manera segura
             let mFechaStr = "";
             try {
                 mFechaStr = m.dateObj.toISOString().split('T')[0];
@@ -399,6 +345,7 @@ function actualizarHome() {
                 balD += val;
             }
 
+            // Verificación de mes y año actual nativo (Como funcionaba originalmente)
             if (m.dateObj.getMonth() === ahora.getMonth() && m.dateObj.getFullYear() === ahora.getFullYear()) {
                 if (m.tipo === 'ingreso') ingM += m.monto;
                 else gasM += m.monto;
@@ -414,6 +361,9 @@ function actualizarHome() {
 
         window.EstadoFinanciero = { ingresos: ingM, gastos: gasM };
 
+        // ==========================================
+        // 3. Render del gráfico Donut (ACTUALIZACIÓN INTELIGENTE)
+        // ==========================================
         const canvasH = document.getElementById('chartHome');
         if (canvasH) {
             const chartExistente = Chart.getChart(canvasH);
@@ -422,10 +372,12 @@ function actualizarHome() {
             const colorsDonut = hayDatos ? ['#D6C7B3', '#45423E'] : ['#E5E7EB', '#E5E7EB'];
 
             if (chartExistente) {
+                // Si el gráfico ya existe, solo actualizamos los datos y colores
                 chartExistente.data.datasets[0].data = dataDonut;
                 chartExistente.data.datasets[0].backgroundColor = colorsDonut;
-                chartExistente.update();
+                chartExistente.update(); // Esto cambia los datos sin parpadear
             } else {
+                // Si es la primera vez que carga, creamos el gráfico
                 const ctx = canvasH.getContext('2d');
                 window.chartH = new Chart(ctx, {
                     type: 'doughnut',
@@ -461,6 +413,7 @@ function actualizarHome() {
             }
         }
 
+        // Lista de transacciones recientes reparada
         const listaH = document.getElementById('lista-recientes');
         if (listaH) {
             listaH.innerHTML = '';
@@ -468,6 +421,7 @@ function actualizarHome() {
                 listaH.innerHTML = '<p class="opacity-30 text-center py-6 text-xs uppercase font-medium">Sin movimientos</p>';
             } else {
                 [...datos].reverse().slice(0, 10).forEach(m => {
+                    // Usamos la fecha original exacta para que window.formatearFechaMX no devuelva error
                     const fechaFormateada = typeof window.formatearFechaMX === 'function' ? window.formatearFechaMX(m.fechaOriginal) : m.dateObj.toLocaleDateString('es-MX');
 
                     listaH.innerHTML += `
@@ -490,6 +444,7 @@ function actualizarHome() {
 
 function actualizarResumen() {
     try {
+        // 🎯 APUNTAMOS DIRECTAMENTE A LA FUENTE REAL DE LOS DATOS
         let rawFiltrados = window.AppState?.movimientos || [];
 
         const { inicio, fin } = window.AppState?.filtrosActuales || {};
@@ -528,6 +483,7 @@ function actualizarResumen() {
         if (contLista) {
             contLista.innerHTML = filtrados.length ? '' : '<p class="opacity-30 text-center py-12 text-xs font-medium uppercase tracking-wider">Sin movimientos registrados en este período.</p>';
 
+            // Ordenamos de forma cronológica por el objeto de tiempo nativo
             [...filtrados].sort((a, b) => b.dateObj - a.dateObj).forEach(m => {
                 const fechaFormateada = typeof window.formatearFechaMX === 'function' ? window.formatearFechaMX(m.fechaOriginal) : m.dateObj.toLocaleDateString('es-MX');
 
@@ -586,6 +542,7 @@ function actualizarFechaHeader() {
 
 function toggleLoading(show) {
     const loader = document.getElementById('loading-overlay');
+    // Solo intenta cambiar el estilo si el elemento existe en el HTML actual
     if (loader) {
         loader.style.display = show ? 'flex' : 'none';
     }
@@ -600,6 +557,7 @@ function inicializarFiltros() {
     const primerDiaMes = `${añoActual}-${mesActual}-01`;
     const fechaHoySistema = `${añoActual}-${mesActual}-${diaActual}`;
 
+    // 🔥 INCLUIMOS 'an' AQUÍ PARA QUE LOS DETECTE DE INMEDIATO
     const prefijos = ['in', 'ex', 'res', 'an'];
 
     prefijos.forEach(pref => {
@@ -616,19 +574,23 @@ function inicializarFiltros() {
     if (!AppState.filtrosActuales.inicio) AppState.filtrosActuales.inicio = primerDiaMes;
     if (!AppState.filtrosActuales.fin) AppState.filtrosActuales.fin = fechaHoySistema;
 
+    // --- ESCUCHADOR GENERAL PARA TODOS LOS INPUTS DE FECHA ---
     document.querySelectorAll('input[type="date"]').forEach(input => {
+        // Evitamos duplicar escuchadores si la función se ejecuta varias veces
         if (input.dataset.escuchadorActivo) return;
         input.dataset.escuchadorActivo = "true";
 
         input.addEventListener('change', () => {
             if (!AppState.filtrosActuales) AppState.filtrosActuales = {};
 
+            // Sincronizamos el valor con AppState sin importar si es 'in', 'ex' o 'an'
             if (input.id.includes('inicio')) {
                 AppState.filtrosActuales.inicio = input.value;
             } else if (input.id.includes('fin')) {
                 AppState.filtrosActuales.fin = input.value;
             }
 
+            // Refrescamos la vista activa
             if (typeof refrescarVistaActual === 'function') {
                 refrescarVistaActual();
             } else if (typeof actualizarResumen === 'function') {
@@ -645,6 +607,8 @@ function formatCurrency(input, hiddenId) {
     input.value = numericValue.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' }) + " MXN";
 }
 
+// Función de seguridad para actualizar elementos
+// Agrega esto a tu ui.js junto a safeSetText
 function safeSetHTML(id, htmlContent) {
     const el = document.getElementById(id);
     if (el) {
@@ -652,8 +616,9 @@ function safeSetHTML(id, htmlContent) {
     }
 }
 
+// --- CONTROLADOR INTELIGENTE DE VISTAS ---
 async function abrirVistaAjustesInteligente() {
-    toggleLoading(true);
+    toggleLoading(true); // Siempre muestra carga antes de la lógica
     try {
         if (!AppState.categorias || AppState.categorias.length === 0) {
             const formData = new FormData();
@@ -666,6 +631,6 @@ async function abrirVistaAjustesInteligente() {
         console.error("Error al cargar categorías:", error);
     } finally {
         toggleLoading(false);
-        renderCategoriasConfig();
+        renderCategoriasConfig(); // SE EJECUTA SIEMPRE, haya datos o error
     }
 }
