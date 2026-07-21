@@ -14,7 +14,8 @@
 
 <body class="min-h-screen flex items-center justify-center bg-[#F8F6F2] px-6">
 
-    <div id="loading-overlay" class="fixed inset-0 z-[100] flex flex-col items-center justify-center">
+    <!-- Overlay de carga inicial -->
+    <div id="loading-overlay" class="fixed inset-0 z-[100] bg-[#F8F6F2] flex flex-col items-center justify-center transition-opacity duration-300">
         <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-stone-700 mb-4"></div>
         <p class="text-xs font-bold uppercase tracking-widest text-stone-500">Conectando con el Sistema...</p>
     </div>
@@ -73,6 +74,8 @@
                         </button>
                     </div>
                 </div>
+                
+                <!-- ID corregido para que coincida con el script -->
                 <p id="login-error" class="text-rose-500 text-xs font-semibold hidden text-center"></p>
 
                 <button type="submit"
