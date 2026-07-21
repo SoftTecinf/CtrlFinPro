@@ -612,16 +612,19 @@ function inicializarFiltros() {
                     sel.addEventListener('change', () => {
                         if (!AppState.filtrosActuales) AppState.filtrosActuales = {};
 
+                        // Actualizamos explícitamente el mes o año en el estado global
                         if (sel.id.includes('mes')) {
                             AppState.filtrosActuales.mes = parseInt(sel.value, 10);
                         } else if (sel.id.includes('año')) {
                             AppState.filtrosActuales.año = parseInt(sel.value, 10);
                         }
 
+                        // Guardamos el cambio en localStorage para que persista
+                        localStorage.setItem('financiero_state', JSON.stringify(AppState));
+
+                        // Refrescamos la vista
                         if (typeof refrescarVistaActual === 'function') {
                             refrescarVistaActual();
-                        } else if (typeof actualizarResumen === 'function') {
-                            actualizarResumen();
                         }
                     });
                 }
