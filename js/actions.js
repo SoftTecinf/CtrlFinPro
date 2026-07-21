@@ -376,11 +376,10 @@ window.actualizarGraficoDistribucion = function () {
 
 // --- BUCLE DE SEGURIDAD PARA HOME ---
 window.addEventListener('load', () => {
-    setInterval(() => {
-        if (typeof Chart !== 'undefined' && typeof window.actualizarGraficoDistribucion === 'function') {
-            window.actualizarGraficoDistribucion();
-        }
-    }, 500);
+    const overlay = document.getElementById('loading-overlay');
+    if (overlay) {
+        overlay.style.display = 'none';
+    }
 });
 
 // --- CONTROL DE SESIÓN ---
@@ -415,7 +414,7 @@ function obtenerMovimientosFiltrados() {
         // Extraemos directamente los primeros 10 caracteres (YYYY-MM-DD) ignorando horas y zonas horarias
         const fechaStr = String(m.fecha).split('T')[0];
         const partes = fechaStr.split('-');
-        
+
         if (partes.length < 3) return false;
 
         const anioMov = parseInt(partes[0], 10);
