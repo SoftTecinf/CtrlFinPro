@@ -515,137 +515,56 @@ function obtenerMovimientosFiltrados() {
 // ========================================================
 // FUNCIÓN DE REPORTE FINANCIERO INTEGRADO (4 PESTAÑAS)
 // ========================================================
-async function generarLibroContable() {
-    // 1. Obtener los datos del período seleccionado y el estado de la aplicación
-    const { mes, año } = obtenerPeriodoActual();
-    const filtrados = obtenerMovimientosFiltrados();
+async function exportarFiltradoXLSX(tipo) {
+    // 🌀 1. MOSTRAR SPINNER AL INICIAR EL PROCESO
+    const spinner = document.getElementById('spinner-global'); // Revisa el ID de tu spinner en el HTML
+    if (spinner) spinner.classList.remove('hidden');
 
-    // 🔥 PROTECCIÓN CLAVE: Obtenemos el historial completo desde el AppState global de forma segura
-    const todosLosMovimientos = window.AppState?.movimientos || [];
+    try {
+        let filtrados = [];
+        if (typeof obtenerMovimientosFiltrados === 'function') {
+            filtrados = obtenerMovimientosFiltrados();
+        }
 
-    if (!filtrados.length) {
-        alert("No hay transacciones registradas en este período para generar el reporte.");
-        return;
-    }
+        if (!filtrados || filtrados.length === 0) {
+            const listaGeneral = window.listaIngresos || window.movimientos || [];
+            filtrados = listaGeneral.filter(m => String(m.tipo || '').toLowerCase().includes(tipo.toLowerCase()));
+        }
 
-    const workbook = new ExcelJS.Workbook();
-    const meses = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
-    const ahora = new Date();
+        if (!filtrados.length) {
+            alert(`Sin movimientos de ${tipo} para el periodo seleccionado.`);
+            return; // El bloque finally se encargará de ocultar el spinner
+        }
 
-    // Formato regional unificado para México
-    const fechaReporte = ahora.toLocaleDateString('es-MX', {
-        weekday: 'long',
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-    }).toUpperCase();
+        const inputsFecha = document.querySelectorAll('input[type="date"]');
+        const txtInicio = inputsFecha.length > 0 ? inputsFecha[0].value : '';
+        const txtFin = inputsFecha.length > 1 ? inputsFecha[1].value : '';
 
-    // ==========================================
-    // --- PESTAÑA 1: ESTADO DE RESULTADOS ---
-    // ==========================================
-    const sheetER = workbook.addWorksheet('Estado de Resultados');
-    let filaER = 1;
+        const ahora = new Date();
+        const workbook = new ExcelJS.Workbook();
+        const ws = workbook.addWorksheet('Detalle');
+        let filaFil = 1;
 
-    filaER = Encabezado(sheetER, "ESTADO DE RESULTADOS", filaER);
-    filaER = Encabezado(sheetER, "PERIODO DE " + meses[mes].toUpperCase() + " " + año, filaER);
-    filaER = Encabezado(sheetER, "GENERADO EL " + fechaReporte, filaER);
-    filaER++; // Celda de separación en blanco
+        const periodoTexto = (txtInicio && txtFin) ? `DEL ${txtInicio} AL ${txtFin}` : `PERIODO ACTUAL`;
 
-    // Sección de Ingresos
-    let totalIngresos = 0;
-    filaER = TitRepCont(sheetER, "INGRESOS", null, filaER);
-    filtrados.filter(m => m.tipo === 'ingreso').forEach(m => {
-        filaER = DatoRepCont(sheetER, m.cat, m.monto, filaER);
-        totalIngresos += m.monto;
-    });
-    filaER = TitRepCont(sheetER, "(+) TOTAL INGRESOS", totalIngresos, filaER);
-    filaER++;
+        filaFil = Encabezado(ws, "DETALLE DE " + tipo.toUpperCase(), filaFil);
+        filaFil = Encabezado(ws, periodoTexto, filaFil);
+        filaFil = Encabezado(ws, "GENERADO EL " + ahora.toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }), filaFil);
+        filaFil++; 
 
-    // Sección de Gastos
-    let totalGastos = 0;
-    filaER = TitRepCont(sheetER, "GASTOS", null, filaER);
-    filtrados.filter(m => m.tipo === 'gasto').forEach(m => {
-        filaER = DatoRepCont(sheetER, m.cat, m.monto, filaER);
-        totalGastos += m.monto;
-    });
-    filaER = TitRepCont(sheetER, "(-) TOTAL GASTOS", totalGastos, filaER);
-    filaER++;
+        if (typeof llenarTablaDetalle === 'function') {
+            llenarTablaDetalle(ws, filtrados, filaFil);
+        }
 
-    // Utilidad Neta
-    const utilidad = totalIngresos - totalGastos;
-    filaER = UtiNeta(sheetER, "UTILIDAD NETA DEL PERIODO", totalGastos, utilidad, filaER);
+        if (typeof descargarArchivo === 'function') {
+            descargarArchivo(workbook, "Detalle_" + tipo + "_" + (txtInicio || 'reporte') + "_al_" + (txtFin || 'fecha'));
+        }
 
-    sheetER.views = [{ showGridLines: false }]; // <-- Oculta las líneas de cuadrícula
-
-    // ==========================================
-    // --- PESTAÑA 2: BALANCE GENERAL ---
-    // ==========================================
-    const sheetBG = workbook.addWorksheet('Balance General');
-    let filaBG = 1;
-
-    filaBG = Encabezado(sheetBG, "BALANCE GENERAL", filaBG);
-    filaBG = Encabezado(sheetBG, "FECHA DE CORTE: " + fechaReporte, filaBG);
-    filaBG = Encabezado(sheetBG, "GENERADO EL " + fechaReporte, filaBG);
-    filaBG++;
-
-    // Cálculo histórico acumulado usando la variable blindada
-    let ingHist = 0, gasHist = 0;
-    todosLosMovimientos.forEach(m => {
-        if (m.tipo === 'ingreso') ingHist += m.monto;
-        else gasHist += m.monto;
-    });
-
-    // Activos
-    filaBG = TitRepCont(sheetBG, "ACTIVOS", null, filaBG);
-    filaBG = DatoRepCont(sheetBG, "Efectivo y Equivalentes", ingHist - gasHist, filaBG);
-    filaBG = TitRepCont(sheetBG, "TOTAL ACTIVOS", ingHist - gasHist, filaBG);
-    filaBG++;
-
-    // Patrimonio
-    filaBG = TitRepCont(sheetBG, "PATRIMONIO", null, filaBG);
-    filaBG = DatoRepCont(sheetBG, "Utilidades Acumuladas (Ingresos)", ingHist, filaBG);
-    filaBG = DatoRepCont(sheetBG, "Gastos Acumulados", -1 * gasHist, filaBG);
-    filaBG = UtiNeta(sheetBG, "TOTAL PATRIMONIO", ingHist - gasHist, ingHist - gasHist, filaBG);
-
-    sheetBG.views = [{ showGridLines: false }]; // <-- Oculta las líneas de cuadrícula
-
-    // ==========================================
-    // --- PESTAÑA 3: DETALLE DE INGRESOS ---
-    // ==========================================
-    const wsIng = workbook.addWorksheet('Ingresos');
-    let filaIng = 1;
-
-    filaIng = Encabezado(wsIng, "DETALLE DE INGRESOS", filaIng);
-    filaIng = Encabezado(wsIng, "PERIODO DE " + meses[mes].toUpperCase() + " " + año, filaIng);
-    filaIng = Encabezado(wsIng, "GENERADO EL " + fechaReporte, filaIng);
-    filaIng++;
-
-    if (typeof llenarTablaDetalle === 'function') {
-        llenarTablaDetalle(wsIng, filtrados.filter(m => m.tipo === 'ingreso'), filaIng); 
-    }
-
-    // ==========================================
-    // --- PESTAÑA 4: DETALLE DE GASTOS ---
-    // ==========================================
-    const wsGas = workbook.addWorksheet('Gastos');
-    let filaGas = 1;
-
-    filaGas = Encabezado(wsGas, "DETALLE DE GASTOS", filaGas);
-    filaGas = Encabezado(wsGas, "PERIODO DE " + meses[mes].toUpperCase() + " " + año, filaGas);
-    filaGas = Encabezado(wsGas, "GENERADO EL " + fechaReporte, filaGas);
-    filaGas++;
-
-    if (typeof llenarTablaDetalle === 'function') {
-        llenarTablaDetalle(wsGas, filtrados.filter(m => m.tipo === 'gasto'), filaGas); 
-    }
-
-    // ==========================================
-    // --- DESCARGA AUTOMÁTICA DEL ARCHIVO ---
-    // ==========================================
-    if (typeof descargarArchivo === 'function') {
-        descargarArchivo(workbook, "RepCont_" + meses[mes] + "_" + año);
-    } else {
-        console.error("❌ Error: La función 'descargarArchivo' no está definida en los módulos globales.");
+    } catch (error) {
+        console.error("❌ Error en el proceso:", error);
+    } finally {
+        // 🌀 2. OCULTAR SPINNER AL TERMINAR (Éxito o Error)
+        if (spinner) spinner.classList.add('hidden');
     }
 }
 
@@ -663,8 +582,6 @@ async function exportarFiltradoXLSX(tipo) {
         const listaGeneral = window.listaIngresos || window.movimientos || [];
         filtrados = listaGeneral.filter(m => String(m.tipo || '').toLowerCase().includes(tipo.toLowerCase()));
     }
-
-    console.log(`📦 Registros obtenidos para exportar (${tipo}):`, filtrados);
 
     if (!filtrados.length) {
         return alert(`Sin movimientos de ${tipo} para el periodo seleccionado.`);
