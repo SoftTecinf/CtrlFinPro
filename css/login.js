@@ -1,5 +1,20 @@
 console.log("Modo Login detectado: Saltando verificaciones del panel principal.");
 console.warn("--> ATENCIÓN: El archivo externo login.js SÍ se está leyendo.");
+
+// Función global asegurada para el overlay de carga
+window.toggleLoading = function(show) {
+    var loader = document.getElementById('loading-overlay');
+    if (loader) {
+        if (show) {
+            loader.classList.remove('opacity-0', 'pointer-events-none');
+            loader.classList.add('opacity-100');
+        } else {
+            loader.classList.remove('opacity-100');
+            loader.classList.add('opacity-0', 'pointer-events-none');
+        }
+    }
+};
+
 // ========================================================
 // MÓDULO DE AUTENTICACIÓN
 // ========================================================
@@ -15,12 +30,12 @@ var AuthModule = {
 
         if (passInput.type === 'password') {
             passInput.type = 'text';
-            eyeOpen.style.display = 'none';
-            eyeClosed.style.display = 'block';
+            if (eyeOpen) eyeOpen.style.display = 'none';
+            if (eyeClosed) eyeClosed.style.display = 'block';
         } else {
             passInput.type = 'password';
-            eyeOpen.style.display = 'block';
-            eyeClosed.style.display = 'none';
+            if (eyeOpen) eyeOpen.style.display = 'block';
+            if (eyeClosed) eyeClosed.style.display = 'none';
         }
     },
 
@@ -98,7 +113,7 @@ var AuthModule = {
 window.AuthModule = AuthModule;
 console.log("--> login.js cargado y AuthModule listo para usarse.");
 
-// 2. Y al final colocas el escuchador
+// Y al final colocas el escuchador
 document.addEventListener('DOMContentLoaded', function () {
     var btn = document.getElementById('btn-toggle-pass');
     if (btn) {
