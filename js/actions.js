@@ -652,50 +652,28 @@ async function generarLibroContable() {
 window.generarLibroContable = generarLibroContable;
 
 async function exportarFiltradoXLSX(tipo) {
-    let movimientosAProcesar = [];
-    
+    // 1. Tomamos los datos directamente de la función que alimenta la tabla visual en pantalla
+    let filtrados = [];
     if (typeof obtenerMovimientosFiltrados === 'function') {
-        movimientosAProcesar = obtenerMovimientosFiltrados();
-    }
-    
-    if (!movimientosAProcesar || movimientosAProcesar.length === 0) {
-        movimientosAProcesar = window.listaIngresos || window.ingresos || window.movimientos || [];
+        filtrados = obtenerMovimientosFiltrados();
     }
 
-    const inputsFecha = document.querySelectorAll('input[type="date"]');
-    const txtInicio = inputsFecha.length > 0 ? inputsFecha[0].value : '';
-    const txtFin = inputsFecha.length > 1 ? inputsFecha[1].value : '';
+    // Si por alguna razón la función global no trae nada, respaldamos con la lista general filtrada por el tipo actual
+    if (!filtrados || filtrados.length === 0) {
+        const listaGeneral = window.listaIngresos || window.movimientos || [];
+        filtrados = listaGeneral.filter(m => String(m.tipo || '').toLowerCase().includes(tipo.toLowerCase()));
+    }
 
-    console.group(`🔍 DIAGNÓSTICO DE EXPORTACIÓN (${tipo.toUpperCase()})`);
-    console.log(`Rango detectado - Desde: ${txtInicio} Hasta: ${txtFin}`);
-    console.log(`Movimientos en memoria:`, movimientosAProcesar);
-
-    const filtrados = movimientosAProcesar.filter(m => {
-        if (!m.fecha) return false;
-
-        // Comprobación flexible del tipo (acepta variaciones)
-        const tipoMov = String(m.tipo || '').toLowerCase().trim();
-        const tipoBuscado = String(tipo).toLowerCase().trim();
-        
-        // Si el tipo coincide o contiene la palabra buscada
-        const esDelTipo = tipoMov === tipoBuscado || tipoMov.includes(tipoBuscado) || tipoBuscado.includes(tipoMov);
-
-        let pasaFecha = true;
-        if (txtInicio && txtFin) {
-            pasaFecha = m.fecha >= txtInicio && m.fecha <= txtFin;
-        }
-
-        console.log(`Evaluando -> ID/Concepto: ${m.concepto || m.descripcion}, Tipo en objeto: "${m.tipo}" (Detectado como: "${tipoMov}"), Fecha: ${m.fecha} -> ¿Pasa?`, esDelTipo && pasaFecha);
-
-        return esDelTipo && pasaFecha;
-    });
-
-    console.log(`Total registros listos para exportar: ${filtrados.length}`);
-    console.groupEnd();
+    console.log(`📦 Registros obtenidos para exportar (${tipo}):`, filtrados);
 
     if (!filtrados.length) {
         return alert(`Sin movimientos de ${tipo} para el periodo seleccionado.`);
     }
+
+    // 2. Extraer las fechas de los inputs visuales para el título del reporte
+    const inputsFecha = document.querySelectorAll('input[type="date"]');
+    const txtInicio = inputsFecha.length > 0 ? inputsFecha[0].value : '';
+    const txtFin = inputsFecha.length > 1 ? inputsFecha[1].value : '';
 
     const ahora = new Date();
     const workbook = new ExcelJS.Workbook();
