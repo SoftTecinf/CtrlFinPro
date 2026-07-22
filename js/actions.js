@@ -417,7 +417,8 @@ window.actualizarGraficoDistribucion = function () {
 };
 
 // --- BUCLE DE SEGURIDAD PARA HOME ---
-window.addEventListener('load', () => {
+window.addEventListener('load', async () => {
+    // Ocultamos el mensaje de carga apenas arranca el Home
     const overlay = document.getElementById('loading-overlay');
     if (overlay) {
         overlay.style.display = 'none';
@@ -474,8 +475,6 @@ function obtenerMovimientosFiltrados() {
 // FUNCIÓN DE REPORTE FINANCIERO INTEGRADO (4 PESTAÑAS)
 // ========================================================
 async function generarLibroContable() {
-    console.log("📥 Iniciando construcción de Libro Contable Excel...");
-
     // 1. Obtener los datos del período seleccionado y el estado de la aplicación
     const { mes, año } = obtenerPeriodoActual();
     const filtrados = obtenerMovimientosFiltrados();
