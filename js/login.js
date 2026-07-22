@@ -21,7 +21,7 @@ var AuthModule = {
         }
     },
 
-   ejecutarLogin: async function () {
+    ejecutarLogin: async function () {
         // Evitamos múltiples ejecuciones simultáneas
         if (window._loginEnProceso) return;
         window._loginEnProceso = true;
@@ -34,6 +34,12 @@ var AuthModule = {
             window._loginEnProceso = false;
             return;
         }
+
+        // 1. Activamos el spinner de carga inmediatamente aquí
+        if (typeof toggleLoading === 'function') {
+            toggleLoading(true);
+        }
+        await new Promise(resolve => requestAnimationFrame(resolve));
 
         console.log("Iniciando sesión para:", usuario);
 
@@ -48,13 +54,24 @@ var AuthModule = {
                 localStorage.setItem('isLoggedIn', 'true');
                 localStorage.setItem('ultima_seccion', 'home');
 
-                window.location.href = "./index.html";
+                // Damos un pequeño respiro visual antes de cambiar de página
+                setTimeout(() => {
+                    window.location.href = "./index.html";
+                }, 600);
             } else {
+                // 2. Si falla, apagamos el spinner y liberamos el proceso
+                if (typeof toggleLoading === 'function') {
+                    toggleLoading(false);
+                }
                 var msg = res && res.message ? res.message : "Usuario o contraseña incorrectos.";
                 alert(msg);
                 window._loginEnProceso = false;
             }
         } catch (err) {
+            // 3. Si hay error de red, apagamos el spinner y liberamos
+            if (typeof toggleLoading === 'function') {
+                toggleLoading(false);
+            }
             console.error("Error atrapado en el login:", err);
             alert("Error al conectar con el servidor. Revisa la consola.");
             window._loginEnProceso = false;
