@@ -22,22 +22,17 @@ var AuthModule = {
     },
 
     ejecutarLogin: async function () {
-        // 1. Activamos el spinner
-        if (typeof toggleLoading === 'function') {
-            toggleLoading(true);
-        }
-
         var usuarioInput = document.getElementById('login-user');
         var passwordInput = document.getElementById('login-pass');
         var errorLabel = document.getElementById('login-error');
 
-        var usuario = usuarioInput ? usuarioInput.value : '';
-        var password = passwordInput ? passwordInput.value : '';
+        var usuario = usuarioInput ? usuarioInput.value.trim() : '';
+        var password = passwordInput ? passwordInput.value.trim() : '';
+
+        console.log("Valor leído de usuario:", usuario);
+        console.log("Valor leído de contraseña:", password);
 
         if (!usuario || !password) {
-            if (typeof toggleLoading === 'function') {
-                toggleLoading(false);
-            }
             if (errorLabel) {
                 errorLabel.innerText = "Por favor llena todos los campos.";
                 errorLabel.classList.remove('hidden');
@@ -47,7 +42,11 @@ var AuthModule = {
             return;
         }
 
-        // 2. Este pequeño respiro fuerza al navegador a pintar el spinner en pantalla
+        // Activamos el spinner solo cuando los datos sí están completos
+        if (typeof toggleLoading === 'function') {
+            toggleLoading(true);
+        }
+
         await new Promise(resolve => requestAnimationFrame(resolve));
 
         try {
@@ -61,11 +60,9 @@ var AuthModule = {
                     errorLabel.classList.add('hidden');
                 }
 
-                // 3. Dejamos el spinner visible un momento antes de cambiar de página
                 setTimeout(() => {
                     window.location.href = "./index.html";
                 }, 600);
-
             } else {
                 if (typeof toggleLoading === 'function') {
                     toggleLoading(false);
