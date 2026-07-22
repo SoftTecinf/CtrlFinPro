@@ -30,23 +30,33 @@
                     <label class="block text-xs font-bold uppercase tracking-wider text-stone-600 mb-3">
                         Comprobantes y/o Facturación
                     </label>
+                    <!-- CAMPO TICKET -->
+                    <div class="mb-3">
+                        <label class="form-label">Ticket 🎫</label>
+                        <div style="margin-bottom: 3px; font-size: 0.9rem;">
+                            <span style="color: #6b7280; font-style: italic;" id="textoTicketActual">No hay
+                                archivo</span>
+                        </div>
+                        <input type="file" id="file-ticket" class="form-control"
+                            style="padding: 6px; font-size: 0.85rem;">
+                    </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
-                        <div>
-                            <span class="text-xs text-gray-500">Ticket 🎟️</span>
-                            <input type="file" id="file-ticket"
-                                class="w-full text-xs text-gray-500 file:mr-2 file:py-1 file:px-2 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-amber-50 file:text-amber-700 hover:file:bg-amber-100" />
+                    <!-- CAMPO FACTURA PDF -->
+                    <div class="mb-3">
+                        <label class="form-label">Factura PDF 📄</label>
+                        <div style="margin-bottom: 3px; font-size: 0.9rem;">
+                            <span style="color: #6b7280; font-style: italic;" id="textoPdfActual">No hay archivo</span>
                         </div>
-                        <div>
-                            <span class="text-xs text-gray-500">Factura PDF 📄</span>
-                            <input type="file" id="file-pdf" accept=".pdf"
-                                class="w-full text-xs text-gray-500 file:mr-2 file:py-1 file:px-2 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-amber-50 file:text-amber-700 hover:file:bg-amber-100" />
+                        <input type="file" id="file-pdf" class="form-control" style="padding: 6px; font-size: 0.85rem;">
+                    </div>
+
+                    <!-- CAMPO FACTURA XML -->
+                    <div class="mb-3">
+                        <label class="form-label">Factura XML 📦</label>
+                        <div style="margin-bottom: 3px; font-size: 0.9rem;">
+                            <span style="color: #6b7280; font-style: italic;" id="textoXmlActual">No hay archivo</span>
                         </div>
-                        <div>
-                            <span class="text-xs text-gray-500">Factura XML 📦</span>
-                            <input type="file" id="file-xml" accept=".xml"
-                                class="w-full text-xs text-gray-500 file:mr-2 file:py-1 file:px-2 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-amber-50 file:text-amber-700 hover:file:bg-amber-100" />
-                        </div>
+                        <input type="file" id="file-xml" class="form-control" style="padding: 6px; font-size: 0.85rem;">
                     </div>
                 </div>
                 <div class="col-span-2 border-t border-stone-200 pt-4 mt-2">
