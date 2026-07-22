@@ -113,12 +113,12 @@ async function showSection(sectionId) {
 
     const loadId = ++currentLoadId;
 
-    // 1. UI: Feedback inmediato
+    // 1. UI: Feedback inmediato en el menú (sin pantalla de carga)
     document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('nav-active'));
     const activeBtn = document.getElementById(`nav-${sectionId}`);
     if (activeBtn) activeBtn.classList.add('nav-active');
 
-    if (typeof toggleLoading === 'function') toggleLoading(true);
+    // 🛑 QUITAMOS el toggleLoading(true) de aquí para que las pestañas vuelen sin avisos molestos.
 
     try {
         // 2. Fetch del HTML de la sección
@@ -131,7 +131,7 @@ async function showSection(sectionId) {
 
         container.innerHTML = html;
 
-        // 4. Renderizado final y repoblación de datos
+        // 4. Renderizado final y repoblación de datos de forma local e instantánea
         requestAnimationFrame(() => {
             const userDisplayEl = document.getElementById('user-display');
             if (userDisplayEl) userDisplayEl.innerText = localStorage.getItem('session_userName') || 'Soporte';
@@ -184,7 +184,9 @@ async function showSection(sectionId) {
             const faltanCategorias = (cats.length === 0);
 
             setTimeout(() => {
+                // Solo si de verdad faltan datos y no se han cargado, mostramos carga de forma excepcional
                 if ((faltanMovimientos || faltanCategorias) && !AppState.cargado) {
+                    if (typeof toggleLoading === 'function') toggleLoading(true);
                     inicializarSincronizacion().then(() => {
                         AppState.cargado = true;
                         inicializarFuncionesPorSeccion(sectionId);
@@ -194,7 +196,6 @@ async function showSection(sectionId) {
                 } else {
                     inicializarFuncionesPorSeccion(sectionId);
                     refrescarVistaActual();
-                    if (typeof toggleLoading === 'function') toggleLoading(false);
                 }
             }, 150);
         });
@@ -238,7 +239,6 @@ function refrescarVistaActual() {
     const mesActual = ahora.getMonth();
     const anioActual = ahora.getFullYear();
 
-    // 1. Inicializamos los selectores de mes y año si están vacíos
     ['res', 'ex', 'in', 'an'].forEach(pref => {
         const m = document.getElementById(`${pref}-mes`);
         const a = document.getElementById(`${pref}-año`);
@@ -247,7 +247,6 @@ function refrescarVistaActual() {
         if (a && !a.value) a.value = anioActual;
     });
 
-    // 2. Actualizamos la fecha visual en el encabezado
     try {
         let contenedorFecha = document.getElementById('header-fecha') ||
             document.getElementById('fecha-actual') ||
@@ -275,12 +274,13 @@ function refrescarVistaActual() {
         console.warn("⚠️ No se pudo auto-detectar el contenedor de la fecha:", error);
     }
 
-    // 3. Refrescamos el home de manera ligera
     if (typeof actualizarHome === 'function') {
         actualizarHome();
     }
 
-    // 4. Verificamos filtros activos de análisis si aplican
+    const activeBtn = document.querySelector('.nav-active');
+    const seccionId = activeBtn ? activeBtn.id : '';
+
     const inputInicioAnálisis = document.getElementById('an-fecha-inicio');
     const inputFinAnálisis = document.getElementById('an-fecha-fin');
 
@@ -294,11 +294,37 @@ function refrescarVistaActual() {
             actualizarResumen();
         }
     }
+    else if (seccionId === 'nav-ingresos') {
+        actualizarListadoIndividual('ingreso', 'lista-ingresos', 'count-in');
+    }
+    else if (seccionId === 'nav-gastos') {
+        const m = document.getElementById('ex-mes');
+        const a = document.getElementById('ex-año');
+        if (m) window.AppState.filtrosActuales.mes = parseInt(m.value);
+        if (a) window.AppState.filtrosActuales.año = parseInt(a.value);
 
-    // 5. Renderizado seguro de gráficos sin bloquear la interfaz
+        actualizarListadoIndividual('gasto', 'lista-gastos', 'count-ex');
+    }
+    else if (seccionId === 'nav-resumen') {
+        const m = document.getElementById('res-mes');
+        const a = document.getElementById('res-año');
+        if (m) window.AppState.filtrosActuales.mes = parseInt(m.value);
+        if (a) window.AppState.filtrosActuales.año = parseInt(a.value);
+
+        if (typeof actualizarResumen === 'function') {
+            actualizarResumen();
+        }
+    }
+
     requestAnimationFrame(() => {
         if (typeof window.actualizarGraficoDistribucion === 'function') {
             window.actualizarGraficoDistribucion();
+        }
+
+        if (seccionId === 'resumen' || seccionId === 'analisis' || seccionId === 'nav-resumen') {
+            if (typeof window.actualizarResumen === 'function') {
+                window.actualizarResumen();
+            }
         }
     });
 }
