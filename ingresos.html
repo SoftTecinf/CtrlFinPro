@@ -32,33 +32,28 @@
                         Comprobantes y/o Facturación
                     </label>
 
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <!-- 1. Foto / Ticket -->
-                        <div class="flex flex-col">
-                            <label class="text-[11px] font-semibold text-stone-500 mb-1">📸 Foto / Ticket</label>
-                            <input type="file" id="file-ticket" accept="image/*" capture="environment"
-                                class="text-xs text-stone-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-stone-100 file:text-stone-700 hover:file:bg-stone-200 cursor-pointer">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
+                        <div>
+                            <span class="text-xs text-gray-500">Ticket 🎟️</span>
+                            <input type="file" id="file-ticket"
+                                class="w-full text-xs text-gray-500 file:mr-2 file:py-1 file:px-2 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-amber-50 file:text-amber-700 hover:file:bg-amber-100" />
                         </div>
-
-                        <!-- 2. Factura PDF -->
-                        <div class="flex flex-col">
-                            <label class="text-[11px] font-semibold text-stone-500 mb-1">📄 Factura PDF</label>
+                        <div>
+                            <span class="text-xs text-gray-500">Factura PDF 📄</span>
                             <input type="file" id="file-pdf" accept=".pdf"
-                                class="text-xs text-stone-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-stone-100 file:text-stone-700 hover:file:bg-stone-200 cursor-pointer">
+                                class="w-full text-xs text-gray-500 file:mr-2 file:py-1 file:px-2 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-amber-50 file:text-amber-700 hover:file:bg-amber-100" />
                         </div>
-
-                        <!-- 3. Factura XML -->
-                        <div class="flex flex-col">
-                            <label class="text-[11px] font-semibold text-stone-500 mb-1">🗂️ Factura XML</label>
+                        <div>
+                            <span class="text-xs text-gray-500">Factura XML 📦</span>
                             <input type="file" id="file-xml" accept=".xml"
-                                class="text-xs text-stone-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-stone-100 file:text-stone-700 hover:file:bg-stone-200 cursor-pointer">
+                                class="w-full text-xs text-gray-500 file:mr-2 file:py-1 file:px-2 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-amber-50 file:text-amber-700 hover:file:bg-amber-100" />
                         </div>
                     </div>
                 </div>
-                <div class="col-span-2 border-t border-stone-200 pt-4 mt-2"> 
-                <button onclick="guardarRegistro('ingreso')"
-                    class="w-full bg-[#D6C7B3] text-white py-4 rounded-xl font-bold uppercase text-xs tracking-widest transition-all">Guardar
-                    Registro</button>
+                <div class="col-span-2 border-t border-stone-200 pt-4 mt-2">
+                    <button onclick="guardarRegistro('ingreso')"
+                        class="w-full bg-[#D6C7B3] text-white py-4 rounded-xl font-bold uppercase text-xs tracking-widest transition-all">Guardar
+                        Registro</button>
                 </div>
             </div>
         </div>
