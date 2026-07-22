@@ -54,17 +54,17 @@
                         </div>
                     </div>
                 </div>
-                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="col-span-2 border-t border-stone-200 pt-4 mt-2">
                     <button onclick="guardarRegistro('gasto')"
-                        class="w-full bg-[#D6C7B3] text-white py-4 rounded-xl font-bold uppercase text-xs tracking-widest transition-all">Guardar
+                        class="w-full bg-stone-700 text-white py-4 rounded-xl font-bold uppercase text-xs tracking-widest">Guardar
                         Registro</button>
                 </div>
             </div>
+            <div class="bg-white p-8 rounded-xl-custom soft-shadow">
+                <h2 class="text-sm font-bold uppercase opacity-30 mb-6 flex justify-between">Historial <span
+                        id="count-ex">0
+                        Movimientos</span></h2>
+                <div id="lista-gastos" class="list-container space-y-3"></div>
+            </div>
         </div>
-        <div class="bg-white p-8 rounded-xl-custom soft-shadow">
-            <h2 class="text-sm font-bold uppercase opacity-30 mb-6 flex justify-between">Historial <span id="count-ex">0
-                    Movimientos</span></h2>
-            <div id="lista-gastos" class="list-container space-y-3"></div>
-        </div>
-    </div>
 </section>
