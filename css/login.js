@@ -43,6 +43,11 @@ var AuthModule = {
             return;
         }
 
+        // 1. Activamos el spinner de carga al iniciar el proceso válido
+        if (typeof toggleLoading === 'function') {
+            toggleLoading(true);
+        }
+
         try {
             // Llama a la API global de app.js
             var res = await FetchAPI("login", { usuario: usuario, password: password });
@@ -54,17 +59,28 @@ var AuthModule = {
                 if (errorLabel) {
                     errorLabel.classList.add('hidden');
                 }
+                
+                // Nota: No apagamos el toggleLoading aquí para que la pantalla 
+                // se mantenga bloqueada con el spinner mientras recarga la página de destino.
                 window.location.href = "./index.html";
             } else {
+                // 2. Apagamos el spinner si las credenciales son incorrectas
+                if (typeof toggleLoading === 'function') {
+                    toggleLoading(false);
+                }
+
                 var msg = res && res.message ? res.message : "Usuario o contraseña incorrectos.";
                 if (errorLabel) {
                     errorLabel.innerText = msg;
                     errorLabel.classList.remove('hidden');
-                } else {
-                    //alert(msg);
                 }
             }
         } catch (err) {
+            // 3. Apagamos el spinner si ocurre un error de red o excepción
+            if (typeof toggleLoading === 'function') {
+                toggleLoading(false);
+            }
+
             console.error("Error en la petición de login:", err);
             alert("Hubo un problema al conectar con el servidor.");
         }
