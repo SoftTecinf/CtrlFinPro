@@ -4,13 +4,13 @@ console.warn("--> ATENCIÓN: El archivo externo login.js SÍ se está leyendo.")
 // MÓDULO DE AUTENTICACIÓN
 // ========================================================
 var AuthModule = {
-    
+
     // Función para ver/ocultar la contraseña
     togglePasswordVisibility: function () {
         var passInput = document.getElementById('login-pass');
         var eyeOpen = document.getElementById('eye-open');
         var eyeClosed = document.getElementById('eye-closed');
-        
+
         if (!passInput) return;
 
         if (passInput.type === 'password') {
@@ -59,12 +59,15 @@ var AuthModule = {
                 if (errorLabel) {
                     errorLabel.classList.add('hidden');
                 }
-                
-                // Nota: No apagamos el toggleLoading aquí para que la pantalla 
-                // se mantenga bloqueada con el spinner mientras recarga la página de destino.
-                window.location.href = "./index.html";
+
+                // Agregamos un pequeño respiro (por ejemplo, 600 milisegundos) 
+                // para que el spinner se luzca antes de cambiar de página
+                setTimeout(() => {
+                    window.location.href = "./index.html";
+                }, 600);
+
             } else {
-                // 2. Apagamos el spinner si las credenciales son incorrectas
+                // Si falla, apagamos el spinner de inmediato
                 if (typeof toggleLoading === 'function') {
                     toggleLoading(false);
                 }
@@ -92,7 +95,7 @@ window.AuthModule = AuthModule;
 console.log("--> login.js cargado y AuthModule listo para usarse.");
 
 // 2. Y al final colocas el escuchador
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     var btn = document.getElementById('btn-toggle-pass');
     if (btn) {
         btn.addEventListener('click', AuthModule.togglePasswordVisibility);
