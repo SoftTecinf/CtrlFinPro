@@ -545,22 +545,18 @@ function actualizarFechaHeader() {
     }
 }
 
-function toggleLoading(show) {
-    const loader = document.getElementById('loading-overlay');
+window.toggleLoading = function(show) {
+    var loader = document.getElementById('loading-overlay');
     if (loader) {
         if (show) {
-            loader.classList.remove('hidden');
-            loader.classList.add('flex');
-            setTimeout(() => loader.classList.remove('opacity-0'), 10);
+            loader.classList.remove('opacity-0', 'pointer-events-none');
+            loader.classList.add('opacity-100');
         } else {
-            loader.classList.add('opacity-0');
-            setTimeout(() => {
-                loader.classList.add('hidden');
-                loader.classList.remove('flex');
-            }, 300);
+            loader.classList.remove('opacity-100');
+            loader.classList.add('opacity-0', 'pointer-events-none');
         }
     }
-}
+};
 
 function inicializarFiltros() {
     const hoy = new Date();
