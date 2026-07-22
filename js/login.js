@@ -21,43 +21,67 @@ var AuthModule = {
         }
     },
 
-   ejecutarLogin: async function () {
-        // Evitamos múltiples ejecuciones simultáneas
-        if (window._loginEnProceso) return;
-        window._loginEnProceso = true;
+    ejecutarLogin: async function () {
+        // 1. Activamos el spinner
+        if (typeof toggleLoading === 'function') {
+            toggleLoading(true);
+        }
 
-        var usuario = document.getElementById('login-user').value;
-        var password = document.getElementById('login-pass').value;
+        var usuarioInput = document.getElementById('login-user');
+        var passwordInput = document.getElementById('login-pass');
+        var errorLabel = document.getElementById('login-error');
+
+        var usuario = usuarioInput ? usuarioInput.value : '';
+        var password = passwordInput ? passwordInput.value : '';
 
         if (!usuario || !password) {
-            alert("Por favor llena todos los campos.");
-            window._loginEnProceso = false;
+            if (typeof toggleLoading === 'function') {
+                toggleLoading(false);
+            }
+            if (errorLabel) {
+                errorLabel.innerText = "Por favor llena todos los campos.";
+                errorLabel.classList.remove('hidden');
+            } else {
+                alert("Por favor llena todos los campos.");
+            }
             return;
         }
 
-        console.log("Iniciando sesión para:", usuario);
+        // 2. Este pequeño respiro fuerza al navegador a pintar el spinner en pantalla
+        await new Promise(resolve => requestAnimationFrame(resolve));
 
         try {
-            console.log("Llamando a FetchAPI...");
-            var res = await FetchAPI("login", { user: usuario, pass: password });
-            console.log("Respuesta obtenida:", res);
+            var res = await FetchAPI("login", { usuario: usuario, password: password });
 
             if (res && res.success) {
-                localStorage.setItem('session_user', res.usuario || res.user);
-                localStorage.setItem('session_userName', res.userName || "Usuario");
-                localStorage.setItem('isLoggedIn', 'true');
-                localStorage.setItem('ultima_seccion', 'home');
+                localStorage.setItem('session_user', res.usuario);
+                localStorage.setItem('session_userName', res.userName);
 
-                window.location.href = "./index.html";
+                if (errorLabel) {
+                    errorLabel.classList.add('hidden');
+                }
+
+                // 3. Dejamos el spinner visible un momento antes de cambiar de página
+                setTimeout(() => {
+                    window.location.href = "./index.html";
+                }, 600);
+
             } else {
+                if (typeof toggleLoading === 'function') {
+                    toggleLoading(false);
+                }
                 var msg = res && res.message ? res.message : "Usuario o contraseña incorrectos.";
-                alert(msg);
-                window._loginEnProceso = false;
+                if (errorLabel) {
+                    errorLabel.innerText = msg;
+                    errorLabel.classList.remove('hidden');
+                }
             }
         } catch (err) {
-            console.error("Error atrapado en el login:", err);
-            alert("Error al conectar con el servidor. Revisa la consola.");
-            window._loginEnProceso = false;
+            if (typeof toggleLoading === 'function') {
+                toggleLoading(false);
+            }
+            console.error("Error en la petición de login:", err);
+            alert("Hubo un problema al conectar con el servidor.");
         }
     }
 };
