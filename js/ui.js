@@ -549,12 +549,14 @@ window.toggleLoading = function(show) {
     var loader = document.getElementById('loading-overlay');
     if (loader) {
         if (show) {
-            loader.classList.remove('opacity-0', 'pointer-events-none');
-            loader.classList.add('opacity-100');
+            loader.style.display = 'flex'; // Fuerza bruta: lo muestra en pantalla
+            console.log("-> FORZANDO SPINNER: visible");
         } else {
-            loader.classList.remove('opacity-100');
-            loader.classList.add('opacity-0', 'pointer-events-none');
+            loader.style.display = 'none'; // Lo oculta
+            console.log("-> FORZANDO SPINNER: oculto");
         }
+    } else {
+        console.error("CRÍTICO: No se encontró #loading-overlay en el DOM");
     }
 };
 
