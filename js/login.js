@@ -34,13 +34,15 @@ var AuthModule = {
             return;
         }
 
-        // Activamos el spinner visiblemente
+        // 1. Activamos el spinner
         if (typeof toggleLoading === 'function') {
             toggleLoading(true);
         }
-        await new Promise(resolve => requestAnimationFrame(resolve));
 
         console.log("Iniciando sesión para:", usuario);
+
+        // 2. Damos un respiro explícito de 50ms para obligar al navegador a renderizar el overlay en pantalla
+        await new Promise(resolve => setTimeout(resolve, 50));
 
         try {
             console.log("Llamando a FetchAPI...");
@@ -53,7 +55,7 @@ var AuthModule = {
                 localStorage.setItem('isLoggedIn', 'true');
                 localStorage.setItem('ultima_seccion', 'home');
 
-                // Damos un respiro con el spinner activo antes de la redirección
+                // Mantenemos el spinner visible un momento más antes de cambiar de página
                 setTimeout(() => {
                     window.location.href = "./index.html";
                 }, 600);
