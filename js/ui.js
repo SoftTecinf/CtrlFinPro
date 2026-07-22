@@ -555,7 +555,7 @@ window.toggleLoading = function(show) {
         loader.style.cssText = "position: fixed; inset: 0; z-index: 99999; display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(28, 25, 23, 0.7); backdrop-filter: blur(4px);";
         loader.innerHTML = `
             <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-stone-100 mb-4" style="border-top: 2px solid transparent; border-left: 2px solid transparent; animation: spin 1s linear infinite;"></div>
-            <p style="color: #f5f5f4; font-size: 12px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.1em;">Conectando con el Sistema...</p>
+            <p style="color: #f5f5f4; font-size: 12px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.1em;">Procesando...</p>
         `;
         document.body.appendChild(loader);
     }
