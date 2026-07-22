@@ -652,30 +652,28 @@ async function generarLibroContable() {
 window.generarLibroContable = generarLibroContable;
 
 async function exportarFiltradoXLSX(tipo) {
-    // 1. Obtener todos los movimientos generales de la app
-    const todosLosMovimientos = obtenerMovimientosFiltrados ? obtenerMovimientosFiltrados() : (window.listaIngresos || []);
+    // 1. Obtener la lista completa directamente desde la variable global de la app
+    const todosLosMovimientos = window.listaIngresos || [];
 
-    // 2. Extraer las fechas de los inputs visibles en pantalla (del 01/06/2026 al 22/07/2026)
-    const inputInicio = document.getElementById('filtro-fecha-inicio'); 
-    const inputFin = document.getElementById('filtro-fecha-fin');       
-    
-    const txtInicio = inputInicio ? inputInicio.value : '';
-    const txtFin = inputFin ? inputFin.value : '';
+    // 2. Extraer las fechas buscando directamente los inputs de fecha en el DOM
+    // Buscamos cualquier input de tipo date o por los selectores visibles
+    const inputsFecha = document.querySelectorAll('input[type="date"]');
+    const txtInicio = inputsFecha.length > 0 ? inputsFecha[0].value : '';
+    const txtFin = inputsFecha.length > 1 ? inputsFecha[1].value : '';
 
     console.group(`🔍 DIAGNÓSTICO DE EXPORTACIÓN (${tipo.toUpperCase()})`);
-    console.log(`Rango visual - Desde: ${txtInicio} Hasta: ${txtFin}`);
-    console.log(`Total movimientos totales recibidos:`, todosLosMovimientos.length);
+    console.log(`Rango detectado - Desde: ${txtInicio} Hasta: ${txtFin}`);
+    console.log(`Total movimientos en memoria:`, todosLosMovimientos.length);
 
-    // 3. Filtrar de forma flexible por tipo y por el rango de fechas exacto de los inputs
+    // 3. Filtrar de forma flexible asegurando el tipo de movimiento
     const filtrados = todosLosMovimientos.filter(m => {
         if (!m.fecha) return false;
 
-        // Validar tipo de movimiento flexible
         const tipoMov = (m.tipo || '').toLowerCase().trim();
         const tipoBuscado = tipo.toLowerCase().trim();
         const esDelTipo = tipoMov === tipoBuscado || tipoMov.includes(tipoBuscado);
 
-        // Validar rango de fechas si los inputs tienen valor
+        // Si hay fechas en los inputs, filtramos por rango; si están vacías, toma todo lo del tipo
         let pasaFecha = true;
         if (txtInicio && txtFin) {
             pasaFecha = m.fecha >= txtInicio && m.fecha <= txtFin;
