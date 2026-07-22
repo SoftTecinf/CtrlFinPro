@@ -547,9 +547,18 @@ function actualizarFechaHeader() {
 
 function toggleLoading(show) {
     const loader = document.getElementById('loading-overlay');
-    // Solo intenta cambiar el estilo si el elemento existe en el HTML actual
     if (loader) {
-        loader.style.display = show ? 'flex' : 'none';
+        if (show) {
+            loader.classList.remove('hidden');
+            loader.classList.add('flex');
+            setTimeout(() => loader.classList.remove('opacity-0'), 10);
+        } else {
+            loader.classList.add('opacity-0');
+            setTimeout(() => {
+                loader.classList.add('hidden');
+                loader.classList.remove('flex');
+            }, 300);
+        }
     }
 }
 
