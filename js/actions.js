@@ -20,6 +20,29 @@ window.EstadoFinanciero = {
     ultimaCarga: { i: -1, g: -1 }
 };
 
+// ==========================================
+// FUNCIÓN AUXILIAR PARA COMPROBANTES (NUEVA)
+// ==========================================
+function archivoABase64(file) {
+    return new Promise((resolve, reject) => {
+        if (!file) {
+            resolve(null);
+            return;
+        }
+        var reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => resolve({
+            nombre: file.name,
+            tipo: file.type,
+            datos: reader.result.split(',')[1]
+        });
+        reader.onerror = error => reject(error);
+    });
+}
+
+// ==========================================
+// FUNCIÓN DE GUARDADO PRINCIPAL (ACTUALIZADA)
+// ==========================================
 async function guardarRegistro(tipo) {
     let btn = document.querySelector(`#sec-${tipo}s button[onclick^="guardarRegistro"]`);
     if (!btn) return;
@@ -51,6 +74,16 @@ async function guardarRegistro(tipo) {
         return;
     }
 
+    // 📎 3. CAPTURA DE COMPROBANTES (Ticket, PDF y XML)
+    const fileTicket = document.getElementById('file-ticket') ? document.getElementById('file-ticket').files[0] : null;
+    const filePdf = document.getElementById('file-pdf') ? document.getElementById('file-pdf').files[0] : null;
+    const fileXml = document.getElementById('file-xml') ? document.getElementById('file-xml').files[0] : null;
+
+    // Convertimos los archivos seleccionados a Base64
+    const comprobanteTicket = await archivoABase64(fileTicket);
+    const comprobantePdf = await archivoABase64(filePdf);
+    const comprobanteXml = await archivoABase64(fileXml);
+
     const idMovi = window.editandoId || Date.now();
     const nuevaData = {
         id: idMovi,
@@ -58,7 +91,11 @@ async function guardarRegistro(tipo) {
         fecha: document.getElementById(`${pref}-fecha`).value,
         cat: selectCat.value.trim().toUpperCase(),
         desc: textoDesc || 'SIN NOMBRE',
-        monto
+        monto,
+        // Agregamos los comprobantes al objeto de envío
+        ticket: comprobanteTicket,
+        facturaPdf: comprobantePdf,
+        facturaXml: comprobanteXml
     };
 
     const esEdicion = !!window.editandoId;
@@ -87,6 +124,12 @@ async function guardarRegistro(tipo) {
         await inicializarSincronizacion();
         refrescarVistaActual();
         limpiarFormulario(tipo);
+
+        // Limpiamos los inputs de archivos después de un guardado exitoso
+        if (document.getElementById('file-ticket')) document.getElementById('file-ticket').value = '';
+        if (document.getElementById('file-pdf')) document.getElementById('file-pdf').value = '';
+        if (document.getElementById('file-xml')) document.getElementById('file-xml').value = '';
+        
     } catch (error) {
         console.error("Error:", error);
         AppState.movimientos = JSON.parse(estadoAnterior);
@@ -150,7 +193,6 @@ async function eliminarMovimiento(id) {
         refrescarVistaActual();
         alert("No se pudo eliminar el registro: " + error.message);
     }
-
 }
 
 async function agregarCategoria() {
@@ -391,6 +433,7 @@ function cerrarSesion() {
     
     window.location.replace("./login.html");
 }
+
 function obtenerPeriodoActual() {
     // Detecta la sección activa del estado global seguro
     const seccion = window.AppState?.seccionActual || 'home';
@@ -492,8 +535,8 @@ async function generarLibroContable() {
     const utilidad = totalIngresos - totalGastos;
     filaER = UtiNeta(sheetER, "UTILIDAD NETA DEL PERIODO", totalGastos, utilidad, filaER);
 
-
     sheetER.views = [{ showGridLines: false }]; // <-- Oculta las líneas de cuadrícula
+
     // ==========================================
     // --- PESTAÑA 2: BALANCE GENERAL ---
     // ==========================================
@@ -538,9 +581,8 @@ async function generarLibroContable() {
     filaIng++;
 
     if (typeof llenarTablaDetalle === 'function') {
-        llenarTablaDetalle(wsIng, filtrados.filter(m => m.tipo === 'ingreso'), filaIng); // <-- Corregido con filaIng
+        llenarTablaDetalle(wsIng, filtrados.filter(m => m.tipo === 'ingreso'), filaIng); 
     }
-
 
     // ==========================================
     // --- PESTAÑA 4: DETALLE DE GASTOS ---
@@ -554,9 +596,8 @@ async function generarLibroContable() {
     filaGas++;
 
     if (typeof llenarTablaDetalle === 'function') {
-        llenarTablaDetalle(wsGas, filtrados.filter(m => m.tipo === 'gasto'), filaGas); // <-- Corregido con filaGas
+        llenarTablaDetalle(wsGas, filtrados.filter(m => m.tipo === 'gasto'), filaGas); 
     }
-
 
     // ==========================================
     // --- DESCARGA AUTOMÁTICA DEL ARCHIVO ---
@@ -789,4 +830,12 @@ function UtiNeta(ws, tit, monto, utilidad, fila) {
 
     return fila + 1;
 }
-async function descargarArchivo(workbook, nombre) { const buffer = await workbook.xlsx.writeBuffer(); const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }); const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = `${nombre}.xlsx`; link.click(); }
+
+async function descargarArchivo(workbook, nombre) { 
+    const buffer = await workbook.xlsx.writeBuffer(); 
+    const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }); 
+    const link = document.createElement('a'); 
+    link.href = URL.createObjectURL(blob); 
+    link.download = `${nombre}.xlsx`; 
+    link.click(); 
+}
