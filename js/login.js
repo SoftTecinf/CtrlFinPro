@@ -51,11 +51,16 @@ var AuthModule = {
                 localStorage.setItem('isLoggedIn', 'true');
                 localStorage.setItem('ultima_seccion', 'home');
 
+                // 📥 Descargamos los datos iniciales una sola vez antes de saltar al home
+                if (typeof inicializarSincronizacion === 'function') {
+                    await inicializarSincronizacion();
+                }
+
                 // Mantenemos el spinner visible un momento más antes de cambiar de página
                 setTimeout(() => {
                     window.location.href = "./index.html";
                 }, 600);
-            } else {
+            }else {
                 if (typeof toggleLoading === 'function') {
                     toggleLoading(false);
                 }
