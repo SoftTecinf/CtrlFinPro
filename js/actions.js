@@ -375,7 +375,7 @@ function prepararEdicion(id, tipo) {
 
     window.scrollTo({ top: 0, behavior: 'smooth' });
 
-    // 5. 📎 Mostrar los comprobantes actuales si existen
+    // 5. 📎 Mostrar los nombres de los comprobantes actuales si existen
     const camposArchivos = [
         { url: mov.ticket, textoId: 'textoTicketActual' },
         { url: mov.facturaPdf, textoId: 'textoPdfActual' },
@@ -383,21 +383,21 @@ function prepararEdicion(id, tipo) {
     ];
 
     camposArchivos.forEach(item => {
-        const contenedor = document.getElementById(item.textoId);
-        if (contenedor) {
-            // Si el objeto de la BD o Drive trae una URL o un nombre válido
+        const span = document.getElementById(item.textoId);
+        if (span) {
             const urlArchivo = typeof item.url === 'object' ? item.url?.url : item.url;
-            const nombreArchivo = typeof item.url === 'object' ? item.url?.nombre : 'Ver archivo';
+            const nombreArchivo = typeof item.url === 'object' ? item.url?.nombre : '';
 
             if (urlArchivo && urlArchivo.trim() !== "") {
-                contenedor.innerHTML = `
-                    <span style="color: #059669; font-weight: 500;">✅ Archivo cargado:</span> 
-                    <a href="${urlArchivo}" target="_blank" style="color: #2563eb; text-decoration: underline; margin-left: 5px;">
-                        ${nombreArchivo || 'Ver documento 👁️'}
+                // Si hay archivo, mostramos el nombre como enlace directo para abrirlo
+                span.innerHTML = `
+                    <a href="${urlArchivo}" target="_blank" style="color: #0284c7; text-decoration: underline; font-weight: 500;">
+                        ${nombreArchivo ? nombreArchivo : 'Ver archivo cargado'}
                     </a>
                 `;
             } else {
-                contenedor.innerHTML = `<span style="color: #6b7280; font-style: italic;">Sin archivo previo</span>`;
+                // Si no hay, dejamos el texto sencillo
+                span.innerHTML = `<span style="color: #6b7280; font-style: italic;">No hay archivo</span>`;
             }
         }
     });
