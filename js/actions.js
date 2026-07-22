@@ -374,6 +374,33 @@ function prepararEdicion(id, tipo) {
     }
 
     window.scrollTo({ top: 0, behavior: 'smooth' });
+
+    // 5. 📎 Mostrar los comprobantes actuales si existen
+    const camposArchivos = [
+        { url: mov.ticket, textoId: 'textoTicketActual' },
+        { url: mov.facturaPdf, textoId: 'textoPdfActual' },
+        { url: mov.facturaXml, textoId: 'textoXmlActual' }
+    ];
+
+    camposArchivos.forEach(item => {
+        const contenedor = document.getElementById(item.textoId);
+        if (contenedor) {
+            // Si el objeto de la BD o Drive trae una URL o un nombre válido
+            const urlArchivo = typeof item.url === 'object' ? item.url?.url : item.url;
+            const nombreArchivo = typeof item.url === 'object' ? item.url?.nombre : 'Ver archivo';
+
+            if (urlArchivo && urlArchivo.trim() !== "") {
+                contenedor.innerHTML = `
+                    <span style="color: #059669; font-weight: 500;">✅ Archivo cargado:</span> 
+                    <a href="${urlArchivo}" target="_blank" style="color: #2563eb; text-decoration: underline; margin-left: 5px;">
+                        ${nombreArchivo || 'Ver documento 👁️'}
+                    </a>
+                `;
+            } else {
+                contenedor.innerHTML = `<span style="color: #6b7280; font-style: italic;">Sin archivo previo</span>`;
+            }
+        }
+    });
 }
 
 // ==========================================
