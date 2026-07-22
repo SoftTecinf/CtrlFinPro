@@ -33,20 +33,34 @@
                     </label>
 
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
-                        <div>
-                            <span class="text-xs text-gray-500">Ticket 🎟️</span>
-                            <input type="file" id="file-ticket"
-                                class="w-full text-xs text-gray-500 file:mr-2 file:py-1 file:px-2 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-amber-50 file:text-amber-700 hover:file:bg-amber-100" />
+                        <!-- CAMPO TICKET -->
+                        <div class="mb-3">
+                            <label class="form-label">Ticket 🎫</label>
+                            <div id="contenedorTicket" style="margin-bottom: 5px; font-size: 0.9rem;">
+                                <span style="color: #6b7280; font-style: italic;" id="textoTicketActual">No hay
+                                    archivo</span>
+                            </div>
+                            <input type="file" id="archivoTicket" class="form-control">
                         </div>
-                        <div>
-                            <span class="text-xs text-gray-500">Factura PDF 📄</span>
-                            <input type="file" id="file-pdf" accept=".pdf"
-                                class="w-full text-xs text-gray-500 file:mr-2 file:py-1 file:px-2 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-amber-50 file:text-amber-700 hover:file:bg-amber-100" />
+
+                        <!-- CAMPO FACTURA PDF -->
+                        <div class="mb-3">
+                            <label class="form-label">Factura PDF 📄</label>
+                            <div id="contenedorPdf" style="margin-bottom: 5px; font-size: 0.9rem;">
+                                <span style="color: #6b7280; font-style: italic;" id="textoPdfActual">No hay
+                                    archivo</span>
+                            </div>
+                            <input type="file" id="archivoPdf" class="form-control">
                         </div>
-                        <div>
-                            <span class="text-xs text-gray-500">Factura XML 📦</span>
-                            <input type="file" id="file-xml" accept=".xml"
-                                class="w-full text-xs text-gray-500 file:mr-2 file:py-1 file:px-2 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-amber-50 file:text-amber-700 hover:file:bg-amber-100" />
+
+                        <!-- CAMPO FACTURA XML -->
+                        <div class="mb-3">
+                            <label class="form-label">Factura XML 📦</label>
+                            <div id="contenedorXml" style="margin-bottom: 5px; font-size: 0.9rem;">
+                                <span style="color: #6b7280; font-style: italic;" id="textoXmlActual">No hay
+                                    archivo</span>
+                            </div>
+                            <input type="file" id="archivoXml" class="form-control">
                         </div>
                     </div>
                 </div>
