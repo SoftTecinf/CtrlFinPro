@@ -652,27 +652,39 @@ async function generarLibroContable() {
 window.generarLibroContable = generarLibroContable;
 
 async function exportarFiltradoXLSX(tipo) {
-    // 1. Obtener los movimientos que ya están filtrados en pantalla (por rango de fechas, etc.)
-    const todosLosMovimientos = obtenerMovimientosFiltrados();
+    // 1. Obtener todos los movimientos generales de la app
+    const todosLosMovimientos = obtenerMovimientosFiltrados ? obtenerMovimientosFiltrados() : (window.listaIngresos || []);
 
-    // 2. Extraer los valores de los inputs de fecha del filtro visual para usarlos en el reporte
-    const inputInicio = document.getElementById('filtro-fecha-inicio'); // Revisa si tu ID es diferente
-    const inputFin = document.getElementById('filtro-fecha-fin');       // Revisa si tu ID es diferente
+    // 2. Extraer las fechas de los inputs visibles en pantalla (del 01/06/2026 al 22/07/2026)
+    const inputInicio = document.getElementById('filtro-fecha-inicio'); 
+    const inputFin = document.getElementById('filtro-fecha-fin');       
     
     const txtInicio = inputInicio ? inputInicio.value : '';
     const txtFin = inputFin ? inputFin.value : '';
 
-    console.group(`🔍 DIAGNÓSTICO DE FILTRADO (${tipo.toUpperCase()})`);
-    console.log(`Rango en pantalla - Desde: ${txtInicio} Hasta: ${txtFin}`);
+    console.group(`🔍 DIAGNÓSTICO DE EXPORTACIÓN (${tipo.toUpperCase()})`);
+    console.log(`Rango visual - Desde: ${txtInicio} Hasta: ${txtFin}`);
+    console.log(`Total movimientos totales recibidos:`, todosLosMovimientos.length);
 
-    // 3. Filtrar estrictamente por tipo (ingreso o egreso) asegurando que pertenezcan a los datos visibles
+    // 3. Filtrar de forma flexible por tipo y por el rango de fechas exacto de los inputs
     const filtrados = todosLosMovimientos.filter(m => {
         if (!m.fecha) return false;
-        const esDelTipo = m.tipo.toLowerCase() === tipo.toLowerCase();
-        return esDelTipo;
+
+        // Validar tipo de movimiento flexible
+        const tipoMov = (m.tipo || '').toLowerCase().trim();
+        const tipoBuscado = tipo.toLowerCase().trim();
+        const esDelTipo = tipoMov === tipoBuscado || tipoMov.includes(tipoBuscado);
+
+        // Validar rango de fechas si los inputs tienen valor
+        let pasaFecha = true;
+        if (txtInicio && txtFin) {
+            pasaFecha = m.fecha >= txtInicio && m.fecha <= txtFin;
+        }
+
+        return esDelTipo && pasaFecha;
     });
 
-    console.log(`Total registros que pasaron el filtro: ${filtrados.length}`);
+    console.log(`Total registros listos para exportar: ${filtrados.length}`);
     console.groupEnd();
 
     if (!filtrados.length) {
@@ -684,28 +696,23 @@ async function exportarFiltradoXLSX(tipo) {
     const ws = workbook.addWorksheet('Detalle');
     let filaFil = 1;
 
-    // Formatear texto del periodo para el reporte basado en las fechas visibles
     const periodoTexto = (txtInicio && txtFin) ? `DEL ${txtInicio} AL ${txtFin}` : `PERIODO ACTUAL`;
 
     filaFil = Encabezado(ws, "DETALLE DE " + tipo.toUpperCase(), filaFil);
     filaFil = Encabezado(ws, periodoTexto, filaFil);
     filaFil = Encabezado(ws, "GENERADO EL " + ahora.toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }), filaFil);
-    filaFil++; // Espacio adicional antes de la tabla
+    filaFil++; 
 
-    // Llamada con el tercer parámetro 'filaFil' para que pinte bien los datos
     if (typeof llenarTablaDetalle === 'function') {
         llenarTablaDetalle(ws, filtrados, filaFil);
     } else {
         console.error("❌ Error: La función 'llenarTablaDetalle' no está definida.");
     }
 
-    // ==========================================
-    // --- DESCARGA AUTOMÁTICA DEL ARCHIVO ---
-    // ==========================================
     if (typeof descargarArchivo === 'function') {
         descargarArchivo(workbook, "Detalle_" + tipo + "_" + (txtInicio || 'reporte') + "_al_" + (txtFin || 'fecha'));
     } else {
-        console.error("❌ Error: La función 'descargarArchivo' no está definida en los módulos globales.");
+        console.error("❌ Error: La función 'descargarArchivo' no está definida.");
     }
 }
 
