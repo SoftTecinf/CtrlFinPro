@@ -156,6 +156,20 @@ function limpiarFormulario(tipo) {
 
     window.editandoId = null;
 
+    // 🧹 Restablecer los textos de los comprobantes al limpiar el formulario
+    const textoTicket = document.getElementById('textoTicketActual');
+    const textoPdf = document.getElementById('textoPdfActual');
+    const textoXml = document.getElementById('textoXmlActual');
+
+    if (textoTicket) textoTicket.innerHTML = `<span style="color: #6b7280; font-style: italic;">No hay archivo</span>`;
+    if (textoPdf) textoPdf.innerHTML = `<span style="color: #6b7280; font-style: italic;">No hay archivo</span>`;
+    if (textoXml) textoXml.innerHTML = `<span style="color: #6b7280; font-style: italic;">No hay archivo</span>`;
+
+    // Limpieza de inputs de archivos por seguridad
+    if (document.getElementById('file-ticket')) document.getElementById('file-ticket').value = '';
+    if (document.getElementById('file-pdf')) document.getElementById('file-pdf').value = '';
+    if (document.getElementById('file-xml')) document.getElementById('file-xml').value = '';
+
     // Limpieza de estados visuales del botón
     const btn = document.querySelector(`#sec-${tipo}s button[onclick^="guardarRegistro"]`);
     if (btn) {
