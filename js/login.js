@@ -34,13 +34,7 @@ var AuthModule = {
             return;
         }
 
-        // 1. Activamos el spinner
-        if (typeof toggleLoading === 'function') {
-            toggleLoading(true);
-        }
-
-        // 2. Damos un respiro explícito de 50ms para obligar al navegador a renderizar el overlay en pantalla
-        await new Promise(resolve => setTimeout(resolve, 50));
+        // ❌ QUITAMOS el toggleLoading(true) aquí para que el login no muestre el overlay al salir
 
         try {
             var res = await FetchAPI("login", { user: usuario, pass: password });
@@ -51,27 +45,20 @@ var AuthModule = {
                 localStorage.setItem('isLoggedIn', 'true');
                 localStorage.setItem('ultima_seccion', 'home');
 
-                // 📥 Descargamos los datos iniciales una sola vez antes de saltar al home
+                // Sincronizamos los datos de forma silenciosa de fondo
                 if (typeof inicializarSincronizacion === 'function') {
                     await inicializarSincronizacion();
                 }
 
-                // Mantenemos el spinner visible un momento más antes de cambiar de página
-                setTimeout(() => {
-                    window.location.href = "./index.html";
-                }, 600);
-            }else {
-                if (typeof toggleLoading === 'function') {
-                    toggleLoading(false);
-                }
+                // Saltamos directo al home sin esperas ni spinners molestos
+                window.location.href = "./index.html";
+                
+            } else {
                 var msg = res && res.message ? res.message : "Usuario o contraseña incorrectos.";
                 alert(msg);
                 window._loginEnProceso = false;
             }
         } catch (err) {
-            if (typeof toggleLoading === 'function') {
-                toggleLoading(false);
-            }
             console.error("Error atrapado en el login:", err);
             alert("Error al conectar con el servidor. Revisa la consola.");
             window._loginEnProceso = false;
@@ -81,12 +68,15 @@ var AuthModule = {
 
 window.AuthModule = AuthModule;
 
-// Limpieza de carga al iniciar
+// Limpieza absoluta al cargar cualquier página de acceso
 document.addEventListener("DOMContentLoaded", () => {
-    // Apagamos el overlay de carga de forma definitiva al entrar al sistema principal
     const overlay = document.getElementById('loading-overlay');
     if (overlay) {
-        overlay.style.display = 'none';
-        overlay.style.opacity = '0';
+        overlay.style.display = 'none'; // Apagado total e inmediato
+    }
+
+    var btnToggle = document.getElementById('btn-toggle-pass');
+    if (btnToggle) {
+        btnToggle.addEventListener('click', AuthModule.togglePasswordVisibility);
     }
 });
