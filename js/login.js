@@ -39,15 +39,11 @@ var AuthModule = {
             toggleLoading(true);
         }
 
-        console.log("Iniciando sesión para:", usuario);
-
         // 2. Damos un respiro explícito de 50ms para obligar al navegador a renderizar el overlay en pantalla
         await new Promise(resolve => setTimeout(resolve, 50));
 
         try {
-            console.log("Llamando a FetchAPI...");
             var res = await FetchAPI("login", { user: usuario, pass: password });
-            console.log("Respuesta obtenida:", res);
 
             if (res && res.success) {
                 localStorage.setItem('session_user', res.usuario || res.user);
