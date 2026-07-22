@@ -652,40 +652,40 @@ async function generarLibroContable() {
 window.generarLibroContable = generarLibroContable;
 
 async function exportarFiltradoXLSX(tipo) {
-    // 1. Buscamos los datos de la fuente que usa tu app para pintar el historial
-    // Si tu app usa alguna variable o función específica para los movimientos filtrados en pantalla, la llamamos aquí:
     let movimientosAProcesar = [];
     
     if (typeof obtenerMovimientosFiltrados === 'function') {
         movimientosAProcesar = obtenerMovimientosFiltrados();
     }
     
-    // Plan B: Si la función anterior no trae nada, revisamos las variables globales comunes
     if (!movimientosAProcesar || movimientosAProcesar.length === 0) {
         movimientosAProcesar = window.listaIngresos || window.ingresos || window.movimientos || [];
     }
 
-    // 2. Extraer las fechas de los inputs visuales (que en tu consola ya salieron perfectos: 2026-06-01 al 2026-07-22)
     const inputsFecha = document.querySelectorAll('input[type="date"]');
     const txtInicio = inputsFecha.length > 0 ? inputsFecha[0].value : '';
     const txtFin = inputsFecha.length > 1 ? inputsFecha[1].value : '';
 
     console.group(`🔍 DIAGNÓSTICO DE EXPORTACIÓN (${tipo.toUpperCase()})`);
     console.log(`Rango detectado - Desde: ${txtInicio} Hasta: ${txtFin}`);
-    console.log(`Total movimientos encontrados en la app:`, movimientosAProcesar.length);
+    console.log(`Movimientos en memoria:`, movimientosAProcesar);
 
-    // 3. Filtrar asegurando el tipo de movimiento y el rango de fechas
     const filtrados = movimientosAProcesar.filter(m => {
         if (!m.fecha) return false;
 
-        const tipoMov = (m.tipo || '').toLowerCase().trim();
-        const tipoBuscado = tipo.toLowerCase().trim();
-        const esDelTipo = tipoMov === tipoBuscado || tipoMov.includes(tipoBuscado);
+        // Comprobación flexible del tipo (acepta variaciones)
+        const tipoMov = String(m.tipo || '').toLowerCase().trim();
+        const tipoBuscado = String(tipo).toLowerCase().trim();
+        
+        // Si el tipo coincide o contiene la palabra buscada
+        const esDelTipo = tipoMov === tipoBuscado || tipoMov.includes(tipoBuscado) || tipoBuscado.includes(tipoMov);
 
         let pasaFecha = true;
         if (txtInicio && txtFin) {
             pasaFecha = m.fecha >= txtInicio && m.fecha <= txtFin;
         }
+
+        console.log(`Evaluando -> ID/Concepto: ${m.concepto || m.descripcion}, Tipo en objeto: "${m.tipo}" (Detectado como: "${tipoMov}"), Fecha: ${m.fecha} -> ¿Pasa?`, esDelTipo && pasaFecha);
 
         return esDelTipo && pasaFecha;
     });
