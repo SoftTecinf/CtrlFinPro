@@ -34,12 +34,12 @@ var AuthModule = {
             return;
         }
 
-        // 1. Activamos el spinner
+        // 1. Activamos el spinner EXCLUSIVAMENTE al presionar ingresar en el login
         if (typeof toggleLoading === 'function') {
             toggleLoading(true);
         }
 
-        // 2. Damos un respiro explícito de 50ms para obligar al navegador a renderizar el overlay en pantalla
+        // 2. Damos un respiro explícito de 50ms para obligar al navegador a renderizar el overlay
         await new Promise(resolve => setTimeout(resolve, 50));
 
         try {
@@ -56,11 +56,11 @@ var AuthModule = {
                     await inicializarSincronizacion();
                 }
 
-                // Mantenemos el spinner visible un momento más antes de cambiar de página
+                // Mantenemos el spinner visible un momento antes de cambiar de página
                 setTimeout(() => {
                     window.location.href = "./index.html";
                 }, 600);
-            }else {
+            } else {
                 if (typeof toggleLoading === 'function') {
                     toggleLoading(false);
                 }
@@ -81,7 +81,7 @@ var AuthModule = {
 
 window.AuthModule = AuthModule;
 
-// Limpieza de carga al iniciar
+// Limpieza de carga al iniciar la pantalla de acceso
 document.addEventListener("DOMContentLoaded", () => {
     const overlay = document.getElementById('loading-overlay');
     if (overlay) {
