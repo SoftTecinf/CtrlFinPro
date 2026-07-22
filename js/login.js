@@ -22,7 +22,6 @@ var AuthModule = {
     },
 
     ejecutarLogin: async function () {
-        // Evitamos múltiples ejecuciones simultáneas
         if (window._loginEnProceso) return;
         window._loginEnProceso = true;
 
@@ -35,7 +34,7 @@ var AuthModule = {
             return;
         }
 
-        // 1. Activamos el spinner de carga inmediatamente aquí
+        // Activamos el spinner visiblemente
         if (typeof toggleLoading === 'function') {
             toggleLoading(true);
         }
@@ -54,12 +53,11 @@ var AuthModule = {
                 localStorage.setItem('isLoggedIn', 'true');
                 localStorage.setItem('ultima_seccion', 'home');
 
-                // Damos un pequeño respiro visual antes de cambiar de página
+                // Damos un respiro con el spinner activo antes de la redirección
                 setTimeout(() => {
                     window.location.href = "./index.html";
                 }, 600);
             } else {
-                // 2. Si falla, apagamos el spinner y liberamos el proceso
                 if (typeof toggleLoading === 'function') {
                     toggleLoading(false);
                 }
@@ -68,7 +66,6 @@ var AuthModule = {
                 window._loginEnProceso = false;
             }
         } catch (err) {
-            // 3. Si hay error de red, apagamos el spinner y liberamos
             if (typeof toggleLoading === 'function') {
                 toggleLoading(false);
             }
