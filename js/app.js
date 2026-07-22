@@ -238,6 +238,7 @@ function refrescarVistaActual() {
     const mesActual = ahora.getMonth();
     const anioActual = ahora.getFullYear();
 
+    // 1. Inicializamos los selectores de mes y año si están vacíos
     ['res', 'ex', 'in', 'an'].forEach(pref => {
         const m = document.getElementById(`${pref}-mes`);
         const a = document.getElementById(`${pref}-año`);
@@ -246,6 +247,7 @@ function refrescarVistaActual() {
         if (a && !a.value) a.value = anioActual;
     });
 
+    // 2. Actualizamos la fecha visual en el encabezado
     try {
         let contenedorFecha = document.getElementById('header-fecha') ||
             document.getElementById('fecha-actual') ||
@@ -273,13 +275,12 @@ function refrescarVistaActual() {
         console.warn("⚠️ No se pudo auto-detectar el contenedor de la fecha:", error);
     }
 
+    // 3. Refrescamos el home de manera ligera
     if (typeof actualizarHome === 'function') {
         actualizarHome();
     }
 
-    const activeBtn = document.querySelector('.nav-active');
-    const seccionId = activeBtn ? activeBtn.id : '';
-
+    // 4. Verificamos filtros activos de análisis si aplican
     const inputInicioAnálisis = document.getElementById('an-fecha-inicio');
     const inputFinAnálisis = document.getElementById('an-fecha-fin');
 
@@ -293,37 +294,11 @@ function refrescarVistaActual() {
             actualizarResumen();
         }
     }
-    else if (seccionId === 'nav-ingresos') {
-        actualizarListadoIndividual('ingreso', 'lista-ingresos', 'count-in');
-    }
-    else if (seccionId === 'nav-gastos') {
-        const m = document.getElementById('ex-mes');
-        const a = document.getElementById('ex-año');
-        if (m) window.AppState.filtrosActuales.mes = parseInt(m.value);
-        if (a) window.AppState.filtrosActuales.año = parseInt(a.value);
 
-        actualizarListadoIndividual('gasto', 'lista-gastos', 'count-ex');
-    }
-    else if (seccionId === 'nav-resumen') {
-        const m = document.getElementById('res-mes');
-        const a = document.getElementById('res-año');
-        if (m) window.AppState.filtrosActuales.mes = parseInt(m.value);
-        if (a) window.AppState.filtrosActuales.año = parseInt(a.value);
-
-        if (typeof actualizarResumen === 'function') {
-            actualizarResumen();
-        }
-    }
-
+    // 5. Renderizado seguro de gráficos sin bloquear la interfaz
     requestAnimationFrame(() => {
         if (typeof window.actualizarGraficoDistribucion === 'function') {
             window.actualizarGraficoDistribucion();
-        }
-
-        if (seccionId === 'resumen' || seccionId === 'analisis' || seccionId === 'nav-resumen') {
-            if (typeof window.actualizarResumen === 'function') {
-                window.actualizarResumen();
-            }
         }
     });
 }
