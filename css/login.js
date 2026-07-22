@@ -26,6 +26,11 @@ var AuthModule = {
 
     // Función para procesar el inicio de sesión
     ejecutarLogin: async function () {
+        // 1. Activamos el spinner de carga inmediatamente al hacer clic
+        if (typeof toggleLoading === 'function') {
+            toggleLoading(true);
+        }
+
         var usuarioInput = document.getElementById('login-user');
         var passwordInput = document.getElementById('login-pass');
         var errorLabel = document.getElementById('login-error');
@@ -34,6 +39,11 @@ var AuthModule = {
         var password = passwordInput ? passwordInput.value : '';
 
         if (!usuario || !password) {
+            // Si faltan datos, apagamos el spinner de inmediato antes de salir
+            if (typeof toggleLoading === 'function') {
+                toggleLoading(false);
+            }
+
             if (errorLabel) {
                 errorLabel.innerText = "Por favor llena todos los campos.";
                 errorLabel.classList.remove('hidden');
@@ -41,11 +51,6 @@ var AuthModule = {
                 alert("Por favor llena todos los campos.");
             }
             return;
-        }
-
-        // 1. Activamos el spinner de carga al iniciar el proceso válido
-        if (typeof toggleLoading === 'function') {
-            toggleLoading(true);
         }
 
         try {
@@ -60,14 +65,13 @@ var AuthModule = {
                     errorLabel.classList.add('hidden');
                 }
 
-                // Agregamos un pequeño respiro (por ejemplo, 600 milisegundos) 
-                // para que el spinner se luzca antes de cambiar de página
+                // Damos un respiro visible de 600ms con el spinner activo antes de cambiar de página
                 setTimeout(() => {
                     window.location.href = "./index.html";
                 }, 600);
 
             } else {
-                // Si falla, apagamos el spinner de inmediato
+                // Si el servidor rechaza las credenciales, apagamos el spinner
                 if (typeof toggleLoading === 'function') {
                     toggleLoading(false);
                 }
@@ -79,7 +83,7 @@ var AuthModule = {
                 }
             }
         } catch (err) {
-            // 3. Apagamos el spinner si ocurre un error de red o excepción
+            // Si ocurre un error de red, apagamos el spinner
             if (typeof toggleLoading === 'function') {
                 toggleLoading(false);
             }
