@@ -22,8 +22,8 @@
 
     <div class="w-full max-w-md bg-white p-8 rounded-xl-custom soft-shadow border border-stone-200">
 
-        <!-- Cambiamos el form por un div para evitar recargas automáticas por errores de eventos -->
-        <div id="login-form">
+        <!-- Usamos un form real pero interceptamos el envío con JavaScript -->
+        <form id="login-form" onsubmit="event.preventDefault(); AuthModule.ejecutarLogin();">
             <div class="text-center mb-8">
                 <div class="w-12 h-12 bg-stone-800 rounded-xl flex items-center justify-center shadow-md mx-auto mb-4">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"
@@ -62,13 +62,13 @@
 
                 <p id="login-error" class="text-rose-500 text-xs font-semibold hidden text-center"></p>
 
-                <!-- Botón normal con onclick directo para evitar cualquier recarga rara -->
-                <button type="button" onclick="AuthModule.ejecutarLogin()"
+                <!-- Cambiamos a type="submit" para que también responda al presionar la tecla Enter -->
+                <button type="submit"
                     class="w-full bg-stone-800 text-white py-4 rounded-xl font-bold uppercase text-xs tracking-widest hover:bg-stone-700 transition-colors cursor-pointer">
                     Ingresar
                 </button>
             </div>
-        </div>
+        </form>
     </div>
 
     <script src="js/ui.js" defer></script>
