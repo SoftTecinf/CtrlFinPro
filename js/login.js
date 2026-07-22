@@ -83,14 +83,10 @@ window.AuthModule = AuthModule;
 
 // Limpieza de carga al iniciar
 document.addEventListener("DOMContentLoaded", () => {
+    // Apagamos el overlay de carga de forma definitiva al entrar al sistema principal
     const overlay = document.getElementById('loading-overlay');
     if (overlay) {
+        overlay.style.display = 'none';
         overlay.style.opacity = '0';
-        setTimeout(() => overlay.remove(), 300);
-    }
-
-    var btnToggle = document.getElementById('btn-toggle-pass');
-    if (btnToggle) {
-        btnToggle.addEventListener('click', AuthModule.togglePasswordVisibility);
     }
 });
