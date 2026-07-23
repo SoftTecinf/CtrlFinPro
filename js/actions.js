@@ -196,21 +196,21 @@ async function agregarCategoria() {
     const selectTipo = document.getElementById('nueva-cat-tipo');
     if (!inputCat || !selectTipo) return;
 
-    // 🌀 1. MOSTRAR SPINNER FLOTANTE
+    const nom = inputCat.value.trim().toUpperCase();
+    const tipo = selectTipo.value;
+
+    if (!nom || !window.AppState) return;
+
+    const existe = window.AppState.categorias.some(c => c.nombre.toUpperCase() === nom && c.tipo === tipo);
+    if (existe) {
+        alert("Esta categoría ya existe.");
+        return;
+    }
+
+    // 🌀 1. MOSTRAR SPINNER FLOTANTE ANTES DE INICIAR CUALQUIER ACCIÓN
     mostrarSpinnerGlobal();
 
     try {
-        const nom = inputCat.value.trim().toUpperCase();
-        const tipo = selectTipo.value;
-
-        if (!nom || !window.AppState) return;
-
-        const existe = window.AppState.categorias.some(c => c.nombre.toUpperCase() === nom && c.tipo === tipo);
-        if (existe) {
-            alert("Esta categoría ya existe.");
-            return;
-        }
-
         const nuevaCat = {
             id: Date.now(),
             nombre: nom,
@@ -228,23 +228,19 @@ async function agregarCategoria() {
 
         inputCat.value = '';
 
-        try {
-            const response = await fetch(API_URL, {
-                method: 'POST',
-                body: JSON.stringify({
-                    action: "agregarCategoria",
-                    id: nuevaCat.id,
-                    nombre: nuevaCat.nombre,
-                    tipo: nuevaCat.tipo // 👈 Corregido de nuevaCap a nuevaCat
-                })
-            });
-            const resultado = await response.json();
-            if (resultado.success) {
-                alert("Categoría agregada en la nube correctamente.");
-            }
-        } catch (error) {
-            // Silencioso
-        }
+        // Petición a la nube de forma totalmente silenciosa (sin alerts)
+        await fetch(API_URL, {
+            method: 'POST',
+            body: JSON.stringify({
+                action: "agregarCategoria",
+                id: nuevaCat.id,
+                nombre: nuevaCat.nombre,
+                tipo: nuevaCat.tipo
+            })
+        });
+
+        // ⏱️ Forzamos una pequeña pausa visual de medio segundo para que el usuario aprecie el spinner
+        await new Promise(resolve => setTimeout(resolve, 500));
 
         if (typeof actualizarSelectsCategorias === 'function') {
             actualizarSelectsCategorias();
@@ -257,9 +253,9 @@ async function agregarCategoria() {
         }
 
     } catch (error) {
-        // Silencioso
+        console.error("Error al sincronizar categoría:", error);
     } finally {
-        // 🌀 2. OCULTAR SPINNER FLOTANTE
+        // 🌀 2. OCULTAR SPINNER FLOTANTE AL TERMINAR (Pase lo que pase)
         ocultarSpinnerGlobal();
     }
 }
