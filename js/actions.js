@@ -429,7 +429,7 @@ window.addEventListener('load', async () => {
     }
 });
 
-function mostrarSpinnerGlobal() {
+/*function mostrarSpinnerGlobal() {
     const spinner = document.getElementById('spinner-global');
     if (spinner) {
         spinner.classList.remove('hidden');
@@ -443,7 +443,7 @@ function ocultarSpinnerGlobal() {
         spinner.classList.add('hidden');
         spinner.style.display = 'none';
     }
-}
+}*/
 
 function cerrarSesion() {
     localStorage.removeItem('isLoggedIn');
