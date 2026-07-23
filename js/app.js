@@ -32,6 +32,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // 1. DEFINICIÓN DE TIEMPO
     const ahora = new Date();
+    const hoyStr = ahora.toISOString().split('T')[0];
 
     // 2. ASEGURAR QUE EL ESTADO GLOBAL EXISTA
     window.AppState = window.AppState || {};
@@ -49,7 +50,18 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
-    // 4. APLICAR VALORES POR DEFECTO (Solo si NO existen en el caché)
+    // 4. APLICAR VALORES POR DEFECTO PARA RANGOS (Si no existen en caché ni en sessionStorage)
+    // Por defecto, asignamos del primer día del mes actual hasta hoy
+    const primerDiaMesStr = new Date(ahora.getFullYear(), ahora.getMonth(), 1).toISOString().split('T')[0];
+
+    if (!window.AppState.filtrosActuales.inicio) {
+        window.AppState.filtrosActuales.inicio = sessionStorage.getItem('filtro_analisis_inicio') || primerDiaMesStr;
+    }
+    if (!window.AppState.filtrosActuales.fin) {
+        window.AppState.filtrosActuales.fin = sessionStorage.getItem('filtro_analisis_fin') || hoyStr;
+    }
+
+    // Mantener compatibilidad si alguna sección sigue usando mes/año numéricos
     if (window.AppState.filtrosActuales.mes === undefined) {
         window.AppState.filtrosActuales.mes = ahora.getMonth();
     }
@@ -75,8 +87,26 @@ document.addEventListener('DOMContentLoaded', async () => {
         btn.classList.add('nav-active');
     }
 
-    // 6. SINCRONIZAR SELECTORES DE UI
+    // 6. SINCRONIZAR SELECTORES Y INPUTS DE FECHA EN LA UI
     const state = window.AppState;
+
+    // Sincronizar inputs de fecha por rango (Análisis / Resumen / Ingresos / Gastos)
+    const inputAnInicio = document.getElementById('an-fecha-inicio');
+    const inputAnFin = document.getElementById('an-fecha-fin');
+    if (inputAnInicio) inputAnInicio.value = state.filtrosActuales.inicio;
+    if (inputAnFin) inputAnFin.value = state.filtrosActuales.fin;
+
+    const inputIngresoFecha = document.getElementById('in-fecha-inicio');
+    if (inputIngresoFecha && sessionStorage.getItem('filtro_ingresos_inicio')) {
+        inputIngresoFecha.value = sessionStorage.getItem('filtro_ingresos_inicio');
+    }
+
+    const inputGastoFecha = document.getElementById('ex-fecha-inicio');
+    if (inputGastoFecha && sessionStorage.getItem('filtro_gastos_inicio')) {
+        inputGastoFecha.value = sessionStorage.getItem('filtro_gastos_inicio');
+    }
+
+    // Sincronizar selectores tradicionales si la app los usa en otras vistas
     const selectoresMes = ['in-mes', 'ex-mes', 'res-mes'];
     const selectoresAnio = ['in-año', 'ex-año', 'res-año'];
 
@@ -92,7 +122,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const inputFecha = document.getElementById('in-fecha');
     if (inputFecha) {
-        inputFecha.value = ahora.toISOString().split('T')[0];
+        inputFecha.value = hoyStr;
     }
 
     // 7. EJECUTAR REFRESCO INICIAL (Con datos de caché)
