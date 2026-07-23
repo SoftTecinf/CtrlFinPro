@@ -700,6 +700,29 @@ function inicializarFiltros() {
     });
 }
 
+function guardarFiltrosIngresos() {
+    const inicio = document.getElementById('in-fecha-inicio')?.value;
+    const fin = document.getElementById('in-fecha-fin')?.value;
+
+    if (inicio) sessionStorage.setItem('filtro_ingresos_inicio', inicio);
+    if (fin) sessionStorage.setItem('filtro_ingresos_fin', fin);
+}
+
+function restaurarFiltrosIngresos() {
+    const inicioGuardado = sessionStorage.getItem('filtro_ingresos_inicio');
+    const finGuardado = sessionStorage.getItem('filtro_ingresos_fin');
+
+    const inputInicio = document.getElementById('in-fecha-inicio');
+    const inputFin = document.getElementById('in-fecha-fin');
+
+    if (inputInicio && inicioGuardado) {
+        inputInicio.value = inicioGuardado;
+    }
+    if (inputFin && finGuardado) {
+        inputFin.value = finGuardado;
+    }
+}
+
 function formatCurrency(input, hiddenId) {
     let value = input.value.replace(/\D/g, "");
     let numericValue = value ? parseFloat(value) / 100 : 0;
