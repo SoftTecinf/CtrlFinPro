@@ -576,10 +576,23 @@ window.generarLibroContable = async function() {
     const fechaInicio = new Date(fechaInicioStr + 'T00:00:00');
     const fechaFin = new Date(fechaFinStr + 'T23:59:59');
 
-    // 2. Obtener los movimientos filtrados por este rango exacto
+    // 2. Obtener los movimientos y asegurar comparación de fechas robusta
     const todosLosMovimientos = window.AppState?.movimientos || [];
+    
     const filtrados = todosLosMovimientos.filter(m => {
-        const fechaMov = new Date(m.fecha + 'T00:00:00');
+        if (!m.fecha) return false;
+        
+        // Normalizar la fecha del movimiento por si viene en formato DD/MM/YYYY o YYYY-MM-DD
+        let fechaMovStr = m.fecha;
+        if (fechaMovStr.includes('/')) {
+            const partes = fechaMovStr.split('/');
+            if (partes.length === 3) {
+                // Convierte DD/MM/YYYY a YYYY-MM-DD
+                fechaMovStr = `${partes[2]}-${partes[1].padStart(2, '0')}-${partes[0].padStart(2, '0')}`;
+            }
+        }
+
+        const fechaMov = new Date(fechaMovStr + 'T00:00:00');
         return fechaMov >= fechaInicio && fechaMov <= fechaFin;
     });
 
