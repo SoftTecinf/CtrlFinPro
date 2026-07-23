@@ -283,11 +283,15 @@ async function eliminarCategoria(id) {
         return;
     }
 
-    window.AppState.categorias = window.AppState.categorias.filter(c => String(c.id) !== String(id));
-    localStorage.setItem('cats_mxn', JSON.stringify(window.AppState.categorias));
-    localStorage.setItem('financiero_state', JSON.stringify(window.AppState));
+    // 🌀 1. MOSTRAR SPINNER GLOBAL
+    mostrarSpinnerGlobal();
 
     try {
+        window.AppState.categorias = window.AppState.categorias.filter(c => String(c.id) !== String(id));
+        localStorage.setItem('cats_mxn', JSON.stringify(window.AppState.categorias));
+        localStorage.setItem('financiero_state', JSON.stringify(window.AppState));
+
+        // Petición a la nube de forma silenciosa
         const response = await fetch(API_URL, {
             method: 'POST',
             body: JSON.stringify({
@@ -295,12 +299,16 @@ async function eliminarCategoria(id) {
                 id: id
             })
         });
-        const resultado = await response.json();
-        if (resultado.success) {
-            alert(`Categoría "${nombreCat}" eliminada de la nube correctamente.`);
-        }
+        await response.json();
+
+        // ⏱️ Pausa visual fluida para que se aprecie el spinner
+        await new Promise(resolve => setTimeout(resolve, 500));
+
     } catch (error) {
         console.error("❌ Error de red:", error);
+    } finally {
+        // 🌀 2. OCULTAR SPINNER GLOBAL AL TERMINAR (Pase lo que pase)
+        ocultarSpinnerGlobal();
     }
 
     if (typeof abrirVistaAjustesInteligente === 'function') abrirVistaAjustesInteligente();
