@@ -214,7 +214,6 @@ async function agregarCategoria() {
     const selectTipo = document.getElementById('nueva-cat-tipo');
     if (!inputCat || !selectTipo) return;
 
-    // Buscamos el botón de agregar categoría que disparó la acción para aplicarle el spinner
     const btn = document.querySelector('#sec-ajustes button[onclick*="agregarCategoria"]') || document.activeElement;
     const textoOriginal = iniciarProcesoBtn(btn);
 
@@ -224,7 +223,6 @@ async function agregarCategoria() {
 
         if (!nom || !window.AppState) return;
 
-        // Validar que no exista ya una categoría con el mismo nombre y tipo para evitar duplicados
         const existe = window.AppState.categorias.some(c => c.nombre.toUpperCase() === nom && c.tipo === tipo);
         if (existe) {
             alert("Esta categoría ya existe.");
@@ -237,10 +235,8 @@ async function agregarCategoria() {
             tipo: tipo
         };
 
-        // 1. Agregar localmente
         window.AppState.categorias.push(nuevaCat);
 
-        // Asegurar que se guarde en la estructura global de almacenamiento que lee tu app
         localStorage.setItem('cats_mxn', JSON.stringify(window.AppState.categorias));
         if (typeof guardarEstadoGlobal === 'function') {
             guardarEstadoGlobal();
@@ -250,7 +246,6 @@ async function agregarCategoria() {
 
         inputCat.value = '';
 
-        // 2. 🔥 SINCRONIZACIÓN CON GOOGLE SHEETS
         try {
             const response = await fetch(API_URL, {
                 method: 'POST',
@@ -271,7 +266,6 @@ async function agregarCategoria() {
             console.error("❌ Error de red al sincronizar la nueva categoría:", error);
         }
 
-        // 3. Refrescar interfaz
         if (typeof actualizarSelectsCategorias === 'function') {
             actualizarSelectsCategorias();
         }
@@ -285,8 +279,7 @@ async function agregarCategoria() {
     } catch (error) {
         console.error("❌ Error general al agregar categoría:", error);
     } finally {
-        // El bloque finally se asegura de restaurar el botón pase lo que pase
-        finalizarProcesoBtn(btn, textoOriginal || "AGREGAR CATEGORÍA");
+        finalizarProcesoBtn(btn, textoOriginal || "+");
     }
 }
 
@@ -477,6 +470,22 @@ window.addEventListener('load', async () => {
         overlay.style.display = 'none';
     }
 });
+
+function iniciarProcesoBtn(btn) {
+    if (!btn) return null;
+    const textoOriginal = btn.innerText;
+    btn.disabled = true;
+    btn.innerText = "PROCESANDO...";
+    btn.classList.add('opacity-70', 'cursor-not-allowed');
+    return textoOriginal;
+}
+
+function finalizarProcesoBtn(btn, textoOriginal) {
+    if (!btn) return;
+    btn.disabled = false;
+    btn.innerText = textoOriginal || "GUARDAR";
+    btn.classList.remove('opacity-70', 'cursor-not-allowed');
+}
 
 // --- CONTROL DE SESIÓN ---
 function cerrarSesion() {
