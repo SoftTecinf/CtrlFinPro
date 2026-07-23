@@ -395,8 +395,8 @@ window.formatearFechaMX = function (fechaString) {
 };
 
 window.guardarFiltrosHome = function() {
-    const mes = document.getElementById('home-mes')?.value;
-    const anio = document.getElementById('home-año')?.value;
+    const mes = document.getElementById('ex-mes')?.value;
+    const anio = document.getElementById('ex-año')?.value;
 
     if (mes !== undefined) sessionStorage.setItem('filtro_home_mes', mes);
     if (anio !== undefined) sessionStorage.setItem('filtro_home_anio', anio);
