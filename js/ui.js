@@ -150,8 +150,12 @@ function renderCategoriasConfig() {
 
 // Asegúrate de que esta variable sea global en tu archivo
 function editMode(id, active) {
+    // Si quieres que active el spinner al alternar la vista, descomenta la siguiente línea:
+    // mostrarSpinnerGlobal();
+
     const viewEl = document.getElementById(`view-${id}`);
     const editEl = document.getElementById(`edit-${id}`);
+    
     if (viewEl && editEl) {
         viewEl.classList.toggle('hidden', active);
         editEl.classList.toggle('hidden', !active);
@@ -160,8 +164,9 @@ function editMode(id, active) {
             if (input) input.focus();
         }
     }
-}
 
+    // ocultarSpinnerGlobal();
+}
 async function saveEdit(id) {
     try {
         const inputEl = document.getElementById(`input-${id}`);
