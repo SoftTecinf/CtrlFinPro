@@ -603,19 +603,23 @@ function inicializarFiltros() {
     const primerDiaMes = `${añoActual}-${mesStr}-01`;
     const fechaHoySistema = `${añoActual}-${mesStr}-${diaActual}`;
 
-    // 1. Manejo de inputs de fecha (Filtros de rango)
+    // 1. Manejo de inputs de fecha usando sessionStorage para aislar por pestaña/sesión
     const prefijos = ['in', 'ex', 'res', 'an'];
     prefijos.forEach(pref => {
         const inputInicio = document.getElementById(`${pref}-fecha-inicio`);
         const inputFin = document.getElementById(`${pref}-fecha-fin`);
 
         if (inputInicio && inputFin) {
-            if (!inputInicio.value) inputInicio.value = primerDiaMes;
-            if (!inputFin.value) inputFin.value = fechaHoySistema;
+            // Cargar desde sessionStorage de la sesión actual, o usar el valor por defecto del sistema
+            const sesionInicio = sessionStorage.getItem(`${pref}_filtro_inicio`) || primerDiaMes;
+            const sesionFin = sessionStorage.getItem(`${pref}_filtro_fin`) || fechaHoySistema;
+
+            inputInicio.value = sesionInicio;
+            inputFin.value = sesionFin;
         }
     });
 
-    // 🌟 AQUÍ ASEGURAMOS LA FECHA ACTUAL EN LOS FORMULARIOS DE CAPTURA INDIVIDUALES (`#in-fecha` / `#ex-fecha`)
+    // Inputs individuales de captura
     const inputFechaIngreso = document.getElementById('in-fecha');
     if (inputFechaIngreso && !inputFechaIngreso.value) {
         inputFechaIngreso.value = fechaHoySistema;
@@ -627,14 +631,12 @@ function inicializarFiltros() {
     }
 
     if (!AppState.filtrosActuales) AppState.filtrosActuales = {};
-    if (!AppState.filtrosActuales.inicio) AppState.filtrosActuales.inicio = primerDiaMes;
-    if (!AppState.filtrosActuales.fin) AppState.filtrosActuales.fin = fechaHoySistema;
-
-    // 🔥 FORZAMOS QUE EL MES Y AÑO INICIALES SEAN LOS DEL SISTEMA
+    AppState.filtrosActuales.inicio = sessionStorage.getItem('an_filtro_inicio') || primerDiaMes;
+    AppState.filtrosActuales.fin = sessionStorage.getItem('an_filtro_fin') || fechaHoySistema;
     AppState.filtrosActuales.mes = mesActualSistema;
     AppState.filtrosActuales.año = añoActual;
 
-    // 2. Llenado y sincronización de los selectores de Mes y Año
+    // 2. Sincronización de selectores de Mes y Año
     const meses = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
     const idsAnio = ['in-año', 'ex-año', 'res-año'];
     const idsMes = ['in-mes', 'ex-mes', 'res-mes'];
@@ -673,8 +675,6 @@ function inicializarFiltros() {
                             AppState.filtrosActuales.año = parseInt(sel.value, 10);
                         }
 
-                        localStorage.setItem('financiero_state', JSON.stringify(AppState));
-
                         if (typeof refrescarVistaActual === 'function') {
                             refrescarVistaActual();
                         }
@@ -684,7 +684,7 @@ function inicializarFiltros() {
         });
     });
 
-    // 3. --- ESCUCHADOR GENERAL PARA TODOS LOS INPUTS DE FECHA ---
+    // 3. Escuchador para guardar en sessionStorage (aislado por sesión activa)
     document.querySelectorAll('input[type="date"]').forEach(input => {
         if (input.dataset.escuchadorActivo) return;
         input.dataset.escuchadorActivo = "true";
@@ -694,8 +694,10 @@ function inicializarFiltros() {
 
             if (input.id.includes('inicio')) {
                 AppState.filtrosActuales.inicio = input.value;
+                sessionStorage.setItem('an_filtro_inicio', input.value);
             } else if (input.id.includes('fin')) {
                 AppState.filtrosActuales.fin = input.value;
+                sessionStorage.setItem('an_filtro_fin', input.value);
             }
 
             if (typeof refrescarVistaActual === 'function') {
