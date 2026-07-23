@@ -140,6 +140,22 @@ async function showSection(sectionId) {
             if (typeof configurarEventosFiltros === 'function') configurarEventosFiltros();
 
             if (sectionId === 'home') {
+                // 1. Restaurar filtros guardados del Home (si aplica, por ejemplo, mes y año)
+                const mesGuardado = sessionStorage.getItem('filtro_home_mes');
+                const anioGuardado = sessionStorage.getItem('filtro_home_anio');
+
+                const mesHomeEl = document.getElementById('home-mes') || document.getElementById('res-mes'); // Ajusta el ID según tu HTML
+                const anioHomeEl = document.getElementById('home-año') || document.getElementById('res-año');
+
+                if (mesHomeEl && mesGuardado !== null) {
+                    mesHomeEl.value = mesGuardado;
+                    window.AppState.filtrosActuales.mes = parseInt(mesGuardado);
+                }
+                if (anioHomeEl && anioGuardado !== null) {
+                    anioHomeEl.value = anioGuardado;
+                    window.AppState.filtrosActuales.año = parseInt(anioGuardado);
+                }
+
                 inicializarFuncionesPorSeccion(sectionId);
                 window.ultimaCarga = { i: -1, g: -1 };
 
@@ -150,30 +166,27 @@ async function showSection(sectionId) {
                 }, 200);
             }
             else if (sectionId === 'ingresos') {
-                const inputFecha = document.getElementById('in-fecha');
-                if (inputFecha) inputFecha.value = new Date().toISOString().split('T')[0];
+                const inicioGuardado = sessionStorage.getItem('filtro_ingresos_inicio');
+                const finGuardado = sessionStorage.getItem('filtro_ingresos_fin');
+                if (inicioGuardado) { document.getElementById('in-fecha-inicio').value = inicioGuardado; window.AppState.filtrosActuales.inicio = inicioGuardado; }
+                if (finGuardado) { document.getElementById('in-fecha-fin').value = finGuardado; window.AppState.filtrosActuales.fin = finGuardado; }
 
-                const mesSel = document.getElementById('in-mes');
-                if (mesSel) {
-                    mesSel.value = AppState.filtrosActuales.mes;
-                }
                 inicializarFuncionesPorSeccion(sectionId);
             }
             else if (sectionId === 'gastos') {
-                const inputFecha = document.getElementById('ex-fecha');
-                if (inputFecha) inputFecha.value = new Date().toISOString().split('T')[0];
+                const inicioGuardado = sessionStorage.getItem('filtro_gastos_inicio');
+                const finGuardado = sessionStorage.getItem('filtro_gastos_fin');
+                if (inicioGuardado) { document.getElementById('ex-fecha-inicio').value = inicioGuardado; window.AppState.filtrosActuales.inicio = inicioGuardado; }
+                if (finGuardado) { document.getElementById('ex-fecha-fin').value = finGuardado; window.AppState.filtrosActuales.fin = finGuardado; }
 
-                const mesSel = document.getElementById('ex-mes');
-                if (mesSel) {
-                    mesSel.value = AppState.filtrosActuales.mes;
-                }
                 inicializarFuncionesPorSeccion(sectionId);
             }
             else if (sectionId === 'resumen' || sectionId === 'analisis') {
-                const mesSel = document.getElementById('res-mes');
-                if (mesSel) {
-                    mesSel.value = AppState.filtrosActuales.mes;
-                }
+                const inicioGuardado = sessionStorage.getItem('filtro_analisis_inicio');
+                const finGuardado = sessionStorage.getItem('filtro_analisis_fin');
+                if (inicioGuardado) { document.getElementById('an-fecha-inicio').value = inicioGuardado; window.AppState.filtrosActuales.inicio = inicioGuardado; }
+                if (finGuardado) { document.getElementById('an-fecha-fin').value = finGuardado; window.AppState.filtrosActuales.fin = finGuardado; }
+
                 inicializarFuncionesPorSeccion(sectionId);
             }
 
@@ -329,7 +342,7 @@ function refrescarVistaActual() {
     });
 }
 
-window.obtenerMovimientosFiltrados = function() {
+window.obtenerMovimientosFiltrados = function () {
     const movimientos = window.AppState?.movimientos || [];
     const { inicio, fin } = window.AppState?.filtrosActuales || {};
 
@@ -339,7 +352,7 @@ window.obtenerMovimientosFiltrados = function() {
 
         return movimientos.filter(m => {
             if (!m.fecha) return false;
-            
+
             let movTime = NaN;
             let fechaStr = String(m.fecha).trim();
 
@@ -379,4 +392,33 @@ window.formatearFechaMX = function (fechaString) {
     if (!fechaString) return "";
     const fecha = new Date(fechaString.includes('T') ? fechaString : `${fechaString}T00:00:00`);
     return fecha.toLocaleDateString('es-MX', { day: '2-digit', month: '2-digit', year: 'numeric' });
+};
+
+window.guardarFiltrosHome = function() {
+    const mes = document.getElementById('home-mes')?.value;
+    const anio = document.getElementById('home-año')?.value;
+
+    if (mes !== undefined) sessionStorage.setItem('filtro_home_mes', mes);
+    if (anio !== undefined) sessionStorage.setItem('filtro_home_anio', anio);
+};
+
+window.guardarFiltrosIngresos = function() {
+    const inicio = document.getElementById('in-fecha-inicio')?.value;
+    const fin = document.getElementById('in-fecha-fin')?.value;
+    if (inicio) sessionStorage.setItem('filtro_ingresos_inicio', inicio);
+    if (fin) sessionStorage.setItem('filtro_ingresos_fin', fin);
+};
+
+window.guardarFiltrosGastos = function() {
+    const inicio = document.getElementById('ex-fecha-inicio')?.value;
+    const fin = document.getElementById('ex-fecha-fin')?.value;
+    if (inicio) sessionStorage.setItem('filtro_gastos_inicio', inicio);
+    if (fin) sessionStorage.setItem('filtro_gastos_fin', fin);
+};
+
+window.guardarFiltrosAnalisis = function() {
+    const inicio = document.getElementById('an-fecha-inicio')?.value;
+    const fin = document.getElementById('an-fecha-fin')?.value;
+    if (inicio) sessionStorage.setItem('filtro_analisis_inicio', inicio);
+    if (fin) sessionStorage.setItem('filtro_analisis_fin', fin);
 };
