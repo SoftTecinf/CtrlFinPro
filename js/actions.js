@@ -543,16 +543,27 @@ async function exportarFiltradoXLSX(tipo) {
     }
 }
 
-//window.generarLibroContable = generarLibroContable;
-async function generarLibroContable() {
-    console.log("📥 Iniciando construcción de Libro Contable Excel...");
+window.generarLibroContable = async function() {
+    console.log("📥 Iniciando construcción de Libro Contable Excel con rangos personalizados...");
 
-    // 1. Obtener los datos del período seleccionado y el estado de la aplicación
-    const { mes, año } = obtenerPeriodoActual();
-    const filtrados = obtenerMovimientosFiltrados();
+    // 1. Obtener los valores directamente de los inputs de fecha del DOM o de AppState
+    const fechaInicioStr = document.getElementById('an-fecha-inicio')?.value || window.AppState?.filtrosActuales?.inicio;
+    const fechaFinStr = document.getElementById('an-fecha-fin')?.value || window.AppState?.filtrosActuales?.fin;
 
-    // 🔥 PROTECCIÓN CLAVE: Obtenemos el historial completo desde el AppState global de forma segura
+    if (!fechaInicioStr || !fechaFinStr) {
+        alert("Por favor selecciona un rango de fechas válido (Del / Al) antes de generar el reporte.");
+        return;
+    }
+
+    const fechaInicio = new Date(fechaInicioStr + 'T00:00:00');
+    const fechaFin = new Date(fechaFinStr + 'T23:59:59');
+
+    // 2. Obtener los movimientos filtrados por este rango exacto
     const todosLosMovimientos = window.AppState?.movimientos || [];
+    const filtrados = todosLosMovimientos.filter(m => {
+        const fechaMov = new Date(m.fecha + 'T00:00:00');
+        return fechaMov >= fechaInicio && fechaMov <= fechaFin;
+    });
 
     if (!filtrados.length) {
         alert("No hay transacciones registradas en este período para generar el reporte.");
@@ -560,16 +571,18 @@ async function generarLibroContable() {
     }
 
     const workbook = new ExcelJS.Workbook();
-    const meses = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
     const ahora = new Date();
 
     // Formato regional unificado para México
-    const fechaReporte = ahora.toLocaleDateString('es-MX', {
+    const fechaReporteFormateada = ahora.toLocaleDateString('es-MX', {
         weekday: 'long',
         year: 'numeric',
         month: 'long',
         day: 'numeric'
     }).toUpperCase();
+
+    // Textos bonitos para el periodo basados en los inputs
+    const periodoTexto = `DEL ${fechaInicio.toLocaleDateString('es-MX')} AL ${fechaFin.toLocaleDateString('es-MX')}`;
 
     // ==========================================
     // --- PESTAÑA 1: ESTADO DE RESULTADOS ---
@@ -578,8 +591,8 @@ async function generarLibroContable() {
     let filaER = 1;
 
     filaER = Encabezado(sheetER, "ESTADO DE RESULTADOS", filaER);
-    filaER = Encabezado(sheetER, "PERIODO DE " + meses[mes].toUpperCase() + " " + año, filaER);
-    filaER = Encabezado(sheetER, "GENERADO EL " + fechaReporte, filaER);
+    filaER = Encabezado(sheetER, "PERIODO " + periodoTexto, filaER);
+    filaER = Encabezado(sheetER, "GENERADO EL " + fechaReporteFormateada, filaER);
     filaER++; // Celda de separación en blanco
 
     // Sección de Ingresos
@@ -605,9 +618,9 @@ async function generarLibroContable() {
     // Utilidad Neta
     const utilidad = totalIngresos - totalGastos;
     filaER = UtiNeta(sheetER, "UTILIDAD NETA DEL PERIODO", totalGastos, utilidad, filaER);
-
     
-    sheetER.views = [{ showGridLines: false }]; // <-- Oculta las líneas de cuadrícula
+    sheetER.views = [{ showGridLines: false }];
+
     // ==========================================
     // --- PESTAÑA 2: BALANCE GENERAL ---
     // ==========================================
@@ -615,11 +628,11 @@ async function generarLibroContable() {
     let filaBG = 1;
 
     filaBG = Encabezado(sheetBG, "BALANCE GENERAL", filaBG);
-    filaBG = Encabezado(sheetBG, "FECHA DE CORTE: " + fechaReporte, filaBG);
-    filaBG = Encabezado(sheetBG, "GENERADO EL " + fechaReporte, filaBG);
+    filaBG = Encabezado(sheetBG, "CORTE AL: " + fechaFin.toLocaleDateString('es-MX'), filaBG);
+    filaBG = Encabezado(sheetBG, "GENERADO EL " + fechaReporteFormateada, filaBG);
     filaBG++;
 
-    // Cálculo histórico acumulado usando la variable blindada
+    // Cálculo histórico acumulado global
     let ingHist = 0, gasHist = 0;
     todosLosMovimientos.forEach(m => {
         if (m.tipo === 'ingreso') ingHist += m.monto;
@@ -638,7 +651,7 @@ async function generarLibroContable() {
     filaBG = DatoRepCont(sheetBG, "Gastos Acumulados", -1 * gasHist, filaBG);
     filaBG = UtiNeta(sheetBG, "TOTAL PATRIMONIO", ingHist - gasHist, ingHist - gasHist, filaBG);
     
-    sheetBG.views = [{ showGridLines: false }]; // <-- Oculta las líneas de cuadrícula
+    sheetBG.views = [{ showGridLines: false }];
 
     // ==========================================
     // --- PESTAÑA 3: DETALLE DE INGRESOS ---
@@ -647,14 +660,13 @@ async function generarLibroContable() {
     let filaIng = 1;
 
     filaIng = Encabezado(wsIng, "DETALLE DE INGRESOS", filaIng);
-    filaIng = Encabezado(wsIng, "PERIODO DE " + meses[mes].toUpperCase() + " " + año, filaIng);
-    filaIng = Encabezado(wsIng, "GENERADO EL " + fechaReporte, filaIng);
+    filaIng = Encabezado(wsIng, "PERIODO " + periodoTexto, filaIng);
+    filaIng = Encabezado(wsIng, "GENERADO EL " + fechaReporteFormateada, filaIng);
     filaIng++;
 
     if (typeof llenarTablaDetalle === 'function') {
-        llenarTablaDetalle(wsIng, filtrados.filter(m => m.tipo === 'ingreso'), filaIng); // <-- Corregido con filaIng
+        llenarTablaDetalle(wsIng, filtrados.filter(m => m.tipo === 'ingreso'), filaIng);
     }
-
 
     // ==========================================
     // --- PESTAÑA 4: DETALLE DE GASTOS ---
@@ -663,24 +675,23 @@ async function generarLibroContable() {
     let filaGas = 1;
 
     filaGas = Encabezado(wsGas, "DETALLE DE GASTOS", filaGas);
-    filaGas = Encabezado(wsGas, "PERIODO DE " + meses[mes].toUpperCase() + " " + año, filaGas);
-    filaGas = Encabezado(wsGas, "GENERADO EL " + fechaReporte, filaGas);
+    filaGas = Encabezado(wsGas, "PERIODO " + periodoTexto, filaGas);
+    filaGas = Encabezado(wsGas, "GENERADO EL " + fechaReporteFormateada, filaGas);
     filaGas++;
 
     if (typeof llenarTablaDetalle === 'function') {
-        llenarTablaDetalle(wsGas, filtrados.filter(m => m.tipo === 'gasto'), filaGas); // <-- Corregido con filaGas
+        llenarTablaDetalle(wsGas, filtrados.filter(m => m.tipo === 'gasto'), filaGas);
     }
-    
 
     // ==========================================
     // --- DESCARGA AUTOMÁTICA DEL ARCHIVO ---
     // ==========================================
     if (typeof descargarArchivo === 'function') {
-        descargarArchivo(workbook, "RepCont_" + meses[mes] + "_" + año);
+        descargarArchivo(workbook, `RepCont_${fechaInicioStr}_al_${fechaFinStr}`);
     } else {
-        console.error("❌ Error: La función 'descargarArchivo' no está definida en los módulos globales.");
+        console.error("❌ Error: La función 'descargarArchivo' no está definida.");
     }
-}
+};
 
 window.exportarFiltradoXLSX = exportarFiltradoXLSX;
 
