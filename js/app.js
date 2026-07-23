@@ -30,6 +30,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
     }
 
+    // 👤 OBTENER EL USUARIO ACTUAL (ej. 'kiara', 'soporte', etc.) para aislar su información
+    const usuarioActual = (localStorage.getItem('usuarioLogueado') || 'default').toLowerCase();
+
     // 1. DEFINICIÓN DE TIEMPO
     const ahora = new Date();
     const hoyStr = ahora.toISOString().split('T')[0];
@@ -38,8 +41,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     window.AppState = window.AppState || {};
     window.AppState.filtrosActuales = window.AppState.filtrosActuales || {};
 
-    // 3. RECUPERAR ESTADO (Cache Primero)
-    const savedState = localStorage.getItem('financiero_state');
+    // 3. RECUPERAR ESTADO EXCLUSIVO DEL USUARIO ACTIVO (Cache Primero con clave por usuario)
+    const savedState = localStorage.getItem(`financiero_state_${usuarioActual}`);
     if (savedState) {
         try {
             const parsed = JSON.parse(savedState);
@@ -50,15 +53,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
-    // 4. APLICAR VALORES POR DEFECTO PARA RANGOS (Si no existen en caché ni en sessionStorage)
-    // Por defecto, asignamos del primer día del mes actual hasta hoy
+    // 4. APLICAR VALORES POR DEFECTO PARA RANGOS (Aislados por usuario en sessionStorage)
     const primerDiaMesStr = new Date(ahora.getFullYear(), ahora.getMonth(), 1).toISOString().split('T')[0];
 
     if (!window.AppState.filtrosActuales.inicio) {
-        window.AppState.filtrosActuales.inicio = sessionStorage.getItem('filtro_analisis_inicio') || primerDiaMesStr;
+        window.AppState.filtrosActuales.inicio = sessionStorage.getItem(`${usuarioActual}_filtro_analisis_inicio`) || primerDiaMesStr;
     }
     if (!window.AppState.filtrosActuales.fin) {
-        window.AppState.filtrosActuales.fin = sessionStorage.getItem('filtro_analisis_fin') || hoyStr;
+        window.AppState.filtrosActuales.fin = sessionStorage.getItem(`${usuarioActual}_filtro_analisis_fin`) || hoyStr;
     }
 
     // Mantener compatibilidad si alguna sección sigue usando mes/año numéricos
@@ -76,8 +78,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         headerDate.innerText = ahora.toLocaleDateString('es-MX', opciones).toUpperCase();
     }
 
-    // Navegación persistente
-    const ultimaSeccion = localStorage.getItem('ultima_seccion') || 'home';
+    // Navegación persistente por usuario
+    const ultimaSeccion = localStorage.getItem(`${usuarioActual}_ultima_seccion`) || 'home';
     await showSection(ultimaSeccion);
 
     // Activar botón nav
@@ -90,23 +92,22 @@ document.addEventListener('DOMContentLoaded', async () => {
     // 6. SINCRONIZAR SELECTORES Y INPUTS DE FECHA EN LA UI
     const state = window.AppState;
 
-    // Sincronizar inputs de fecha por rango (Análisis / Resumen / Ingresos / Gastos)
     const inputAnInicio = document.getElementById('an-fecha-inicio');
     const inputAnFin = document.getElementById('an-fecha-fin');
     if (inputAnInicio) inputAnInicio.value = state.filtrosActuales.inicio;
     if (inputAnFin) inputAnFin.value = state.filtrosActuales.fin;
 
     const inputIngresoFecha = document.getElementById('in-fecha-inicio');
-    if (inputIngresoFecha && sessionStorage.getItem('filtro_ingresos_inicio')) {
-        inputIngresoFecha.value = sessionStorage.getItem('filtro_ingresos_inicio');
+    if (inputIngresoFecha && sessionStorage.getItem(`${usuarioActual}_filtro_ingresos_inicio`)) {
+        inputIngresoFecha.value = sessionStorage.getItem(`${usuarioActual}_filtro_ingresos_inicio`);
     }
 
     const inputGastoFecha = document.getElementById('ex-fecha-inicio');
-    if (inputGastoFecha && sessionStorage.getItem('filtro_gastos_inicio')) {
-        inputGastoFecha.value = sessionStorage.getItem('filtro_gastos_inicio');
+    if (inputGastoFecha && sessionStorage.getItem(`${usuarioActual}_filtro_gastos_inicio`)) {
+        inputGastoFecha.value = sessionStorage.getItem(`${usuarioActual}_filtro_gastos_inicio`);
     }
 
-    // Sincronizar selectores tradicionales si la app los usa en otras vistas
+    // Sincronizar selectores tradicionales
     const selectoresMes = ['in-mes', 'ex-mes', 'res-mes'];
     const selectoresAnio = ['in-año', 'ex-año', 'res-año'];
 
@@ -125,10 +126,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         inputFecha.value = hoyStr;
     }
 
-    // 7. EJECUTAR REFRESCO INICIAL (Con datos de caché)
+    // 7. EJECUTAR REFRESCO INICIAL
     refrescarVistaActual();
 
-    // 8. SINCRONIZACIÓN EN SEGUNDO PLANO (Datos reales)
+    // 8. SINCRONIZACIÓN EN SEGUNDO PLANO
     inicializarSincronizacion().then(() => {
         refrescarVistaActual();
     });
