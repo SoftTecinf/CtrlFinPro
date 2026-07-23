@@ -463,14 +463,32 @@ function cerrarSesion() {
 
 function obtenerPeriodoActual() {
     const seccion = window.AppState?.seccionActual || 'home';
-    let pref = seccion === 'ingresos' ? 'in' : (seccion === 'gastos' ? 'ex' : 'res');
+    let pref = seccion === 'ingresos' ? 'in' : (seccion === 'gastos' ? 'ex' : 'an');
 
+    // Intentar leer de los inputs de fecha por rango de la vista actual
+    const inputInicio = document.getElementById(`${pref}-fecha-inicio`);
+    const inputFin = document.getElementById(`${pref}-fecha-fin`);
+
+    if (inputInicio && inputFin && inputInicio.value && inputFin.value) {
+        return {
+            tipo: 'rango',
+            inicio: inputInicio.value,
+            fin: inputFin.value,
+            // Valores numéricos de respaldo calculados a partir de la fecha de inicio
+            mes: new Date(inputInicio.value + 'T00:00:00').getMonth(),
+            año: new Date(inputInicio.value + 'T00:00:00').getFullYear()
+        };
+    }
+
+    // Respaldo para vistas que sigan usando selectores de mes/año tradicionales
     const mesEl = document.getElementById(`${pref}-mes`);
     const anioEl = document.getElementById(`${pref}-año`);
 
+    const ahora = new Date();
     return {
-        mes: mesEl ? parseInt(mesEl.value) : new Date().getMonth(),
-        año: anioEl ? parseInt(anioEl.value) : new Date().getFullYear()
+        tipo: 'mes',
+        mes: mesEl ? parseInt(mesEl.value) : ahora.getMonth(),
+        año: anioEl ? parseInt(anioEl.value) : ahora.getFullYear()
     };
 }
 
