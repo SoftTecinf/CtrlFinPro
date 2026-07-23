@@ -214,67 +214,79 @@ async function agregarCategoria() {
     const selectTipo = document.getElementById('nueva-cat-tipo');
     if (!inputCat || !selectTipo) return;
 
-    const nom = inputCat.value.trim().toUpperCase();
-    const tipo = selectTipo.value;
+    // Buscamos el botón de agregar categoría que disparó la acción para aplicarle el spinner
+    const btn = document.querySelector('#sec-ajustes button[onclick*="agregarCategoria"]') || document.activeElement;
+    const textoOriginal = iniciarProcesoBtn(btn);
 
-    if (!nom || !window.AppState) return;
-
-    // Validar que no exista ya una categoría con el mismo nombre y tipo para evitar duplicados
-    const existe = window.AppState.categorias.some(c => c.nombre.toUpperCase() === nom && c.tipo === tipo);
-    if (existe) {
-        alert("Esta categoría ya existe.");
-        return;
-    }
-
-    const nuevaCat = {
-        id: Date.now(),
-        nombre: nom,
-        tipo: tipo
-    };
-
-    // 1. Agregar localmente
-    window.AppState.categorias.push(nuevaCat);
-
-    // Asegurar que se guarde en la estructura global de almacenamiento que lee tu app
-    localStorage.setItem('cats_mxn', JSON.stringify(window.AppState.categorias));
-    if (typeof guardarEstadoGlobal === 'function') {
-        guardarEstadoGlobal();
-    } else {
-        localStorage.setItem('financiero_state', JSON.stringify(window.AppState));
-    }
-
-    inputCat.value = '';
-
-    // 2. 🔥 SINCRONIZACIÓN CON GOOGLE SHEETS
     try {
-        const response = await fetch(API_URL, {
-            method: 'POST',
-            body: JSON.stringify({
-                action: "agregarCategoria",
-                id: nuevaCat.id,
-                nombre: nuevaCat.nombre,
-                tipo: nuevaCat.tipo
-            })
-        });
-        const resultado = await response.json();
-        if (resultado.success) {
-            alert("Categoría agregada en la nube correctamente.");
-        } else {
-            console.error("❌ Error en la nube al agregar categoría:", resultado.message);
-        }
-    } catch (error) {
-        console.error("❌ Error de red al sincronizar la nueva categoría:", error);
-    }
+        const nom = inputCat.value.trim().toUpperCase();
+        const tipo = selectTipo.value;
 
-    // 3. Refrescar interfaz
-    if (typeof actualizarSelectsCategorias === 'function') {
-        actualizarSelectsCategorias();
-    }
-    if (typeof abrirVistaAjustesInteligente === 'function') {
-        abrirVistaAjustesInteligente();
-    }
-    if (typeof refrescarVistaActual === 'function') {
-        refrescarVistaActual();
+        if (!nom || !window.AppState) return;
+
+        // Validar que no exista ya una categoría con el mismo nombre y tipo para evitar duplicados
+        const existe = window.AppState.categorias.some(c => c.nombre.toUpperCase() === nom && c.tipo === tipo);
+        if (existe) {
+            alert("Esta categoría ya existe.");
+            return;
+        }
+
+        const nuevaCat = {
+            id: Date.now(),
+            nombre: nom,
+            tipo: tipo
+        };
+
+        // 1. Agregar localmente
+        window.AppState.categorias.push(nuevaCat);
+
+        // Asegurar que se guarde en la estructura global de almacenamiento que lee tu app
+        localStorage.setItem('cats_mxn', JSON.stringify(window.AppState.categorias));
+        if (typeof guardarEstadoGlobal === 'function') {
+            guardarEstadoGlobal();
+        } else {
+            localStorage.setItem('financiero_state', JSON.stringify(window.AppState));
+        }
+
+        inputCat.value = '';
+
+        // 2. 🔥 SINCRONIZACIÓN CON GOOGLE SHEETS
+        try {
+            const response = await fetch(API_URL, {
+                method: 'POST',
+                body: JSON.stringify({
+                    action: "agregarCategoria",
+                    id: nuevaCat.id,
+                    nombre: nuevaCat.nombre,
+                    tipo: nuevaCat.tipo
+                })
+            });
+            const resultado = await response.json();
+            if (resultado.success) {
+                alert("Categoría agregada en la nube correctamente.");
+            } else {
+                console.error("❌ Error en la nube al agregar categoría:", resultado.message);
+            }
+        } catch (error) {
+            console.error("❌ Error de red al sincronizar la nueva categoría:", error);
+        }
+
+        // 3. Refrescar interfaz
+        if (typeof actualizarSelectsCategorias === 'function') {
+            actualizarSelectsCategorias();
+        }
+        if (typeof abrirVistaAjustesInteligente === 'function') {
+            abrirVistaAjustesInteligente();
+        }
+        if (typeof refrescarVistaActual === 'function') {
+            refrescarVistaActual();
+        }
+
+    } catch (error) {
+        console.error("❌ Error general al agregar categoría:", error);
+    } finally {
+        // El bloque finally se asegura de restaurar el botón pase lo que pase
+        finalizarProcesoBtn(btn, textoOriginal || "AGREGAR CATEGORÍA");
     }
 }
 
