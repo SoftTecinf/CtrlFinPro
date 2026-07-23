@@ -543,7 +543,7 @@ async function exportarFiltradoXLSX(tipo) {
     }
 }
 
-window.generarLibroContable = generarLibroContable;
+//window.generarLibroContable = generarLibroContable;
 window.exportarFiltradoXLSX = exportarFiltradoXLSX;
 
 function llenarTablaDetalle(ws, datos, filaLle) {
