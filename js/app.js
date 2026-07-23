@@ -144,8 +144,8 @@ async function showSection(sectionId) {
                 const mesGuardado = sessionStorage.getItem('filtro_home_mes');
                 const anioGuardado = sessionStorage.getItem('filtro_home_anio');
 
-                const mesHomeEl = document.getElementById('home-mes') || document.getElementById('res-mes'); // Ajusta el ID según tu HTML
-                const anioHomeEl = document.getElementById('home-año') || document.getElementById('res-año');
+                const mesHomeEl = document.getElementById('ex-mes') || document.getElementById('res-mes'); // Ajusta el ID según tu HTML
+                const anioHomeEl = document.getElementById('ex-año') || document.getElementById('res-año');
 
                 if (mesHomeEl && mesGuardado !== null) {
                     mesHomeEl.value = mesGuardado;
