@@ -454,10 +454,32 @@ function ocultarSpinnerGlobal() {
 }
 
 function cerrarSesion() {
+    // 1. Obtener el usuario actual antes de eliminar las credenciales
+    const usuarioActual = (localStorage.getItem('usuarioLogueado') || localStorage.getItem('session_user') || '').toLowerCase();
+
+    // 2. Borrar los estados, filtros y datos específicos guardados de este usuario
+    if (usuarioActual) {
+        localStorage.removeItem(`financiero_state_${usuarioActual}`);
+        localStorage.removeItem(`${usuarioActual}_ultima_seccion`);
+    }
+
+    // 3. Limpiar cualquier residuo genérico en localStorage que use la app
+    localStorage.removeItem('usuarioLogueado');
     localStorage.removeItem('isLoggedIn');
     localStorage.removeItem('session_user');
     localStorage.removeItem('session_userName');
     localStorage.removeItem('ultima_seccion');
+    localStorage.removeItem('financiero_state'); // Por si quedó alguna llave antigua global
+
+    // 4. Limpiar el almacenamiento de sesión de la pestaña actual
+    sessionStorage.clear();
+
+    // 5. Vaciar el estado global en memoria
+    if (window.AppState) {
+        window.AppState = {};
+    }
+
+    // 6. Redirigir de forma segura al login
     window.location.replace("./login.html");
 }
 
