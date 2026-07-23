@@ -596,14 +596,14 @@ window.toggleLoading = function(show) {
 function inicializarFiltros() {
     const hoy = new Date();
     const añoActual = hoy.getFullYear();
-    const mesActualSistema = hoy.getMonth(); // 0 para Enero, 5 para Junio, 6 para Julio, etc.
+    const mesActualSistema = hoy.getMonth(); 
     const mesStr = String(mesActualSistema + 1).padStart(2, '0');
     const diaActual = String(hoy.getDate()).padStart(2, '0');
 
     const primerDiaMes = `${añoActual}-${mesStr}-01`;
     const fechaHoySistema = `${añoActual}-${mesStr}-${diaActual}`;
 
-    // 1. Manejo de inputs de fecha
+    // 1. Manejo de inputs de fecha (Filtros de rango)
     const prefijos = ['in', 'ex', 'res', 'an'];
     prefijos.forEach(pref => {
         const inputInicio = document.getElementById(`${pref}-fecha-inicio`);
@@ -614,6 +614,17 @@ function inicializarFiltros() {
             if (!inputFin.value) inputFin.value = fechaHoySistema;
         }
     });
+
+    // 🌟 AQUÍ ASEGURAMOS LA FECHA ACTUAL EN LOS FORMULARIOS DE CAPTURA INDIVIDUALES (`#in-fecha` / `#ex-fecha`)
+    const inputFechaIngreso = document.getElementById('in-fecha');
+    if (inputFechaIngreso && !inputFechaIngreso.value) {
+        inputFechaIngreso.value = fechaHoySistema;
+    }
+
+    const inputFechaGasto = document.getElementById('ex-fecha');
+    if (inputFechaGasto && !inputFechaGasto.value) {
+        inputFechaGasto.value = fechaHoySistema;
+    }
 
     if (!AppState.filtrosActuales) AppState.filtrosActuales = {};
     if (!AppState.filtrosActuales.inicio) AppState.filtrosActuales.inicio = primerDiaMes;
@@ -640,7 +651,7 @@ function inicializarFiltros() {
                         opt.innerHTML = m;
                         sel.appendChild(opt);
                     });
-                    sel.value = mesActualSistema; // Apunta al mes actual del sistema
+                    sel.value = mesActualSistema; 
                 } else {
                     for (let i = añoActual; i >= añoActual - 4; i--) {
                         let opt = document.createElement('option');
@@ -648,26 +659,22 @@ function inicializarFiltros() {
                         opt.innerHTML = i;
                         sel.appendChild(opt);
                     }
-                    sel.value = añoActual; // Apunta al año actual del sistema
+                    sel.value = añoActual; 
                 }
 
-                // Escuchador dinámico directo para los selectores de mes y año
                 if (!sel.dataset.escuchadorActivo) {
                     sel.dataset.escuchadorActivo = "true";
                     sel.addEventListener('change', () => {
                         if (!AppState.filtrosActuales) AppState.filtrosActuales = {};
 
-                        // Actualizamos explícitamente el mes o año en el estado global
                         if (sel.id.includes('mes')) {
                             AppState.filtrosActuales.mes = parseInt(sel.value, 10);
                         } else if (sel.id.includes('año')) {
                             AppState.filtrosActuales.año = parseInt(sel.value, 10);
                         }
 
-                        // Guardamos el cambio en localStorage para que persista
                         localStorage.setItem('financiero_state', JSON.stringify(AppState));
 
-                        // Refrescamos la vista
                         if (typeof refrescarVistaActual === 'function') {
                             refrescarVistaActual();
                         }
