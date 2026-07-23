@@ -115,3 +115,7 @@ input[type="file"]::file-selector-button {
 input[type="file"] {
     color: transparent; /* Oculta el texto "Sin archivos seleccionados" del navegador */
 }
+
+#spinner-global:not(.hidden) {
+    display: flex !important;
+}
