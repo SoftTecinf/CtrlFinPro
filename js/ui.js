@@ -167,6 +167,7 @@ function editMode(id, active) {
 
     // ocultarSpinnerGlobal();
 }
+
 async function saveEdit(id) {
     try {
         const inputEl = document.getElementById(`input-${id}`);
@@ -199,31 +200,48 @@ async function saveEdit(id) {
                 return;
             }
 
-            // 3. Actualizar el nombre en el catálogo de categorías local si pasó la validación
-            window.AppState.categorias[index].nombre = nuevoNombre;
-            localStorage.setItem('cats_mxn', JSON.stringify(window.AppState.categorias));
+            // 🌀 1. MOSTRAR SPINNER GLOBAL ANTES DE GUARDAR Y SINCRONIZAR
+            mostrarSpinnerGlobal();
 
-            // 4. 🔥 SINCRONIZACIÓN CON GOOGLE SHEETS
             try {
+                // 3. Actualizar el nombre en el catálogo de categorías local
+                window.AppState.categorias[index].nombre = nuevoNombre;
+                localStorage.setItem('cats_mxn', JSON.stringify(window.AppState.categorias));
+                localStorage.setItem('financiero_state', JSON.stringify(window.AppState));
+
+                // 4. 🔥 SINCRONIZACIÓN CON GOOGLE SHEETS
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 8000); // 8 segundos máx
+
                 const response = await fetch(API_URL, {
                     method: 'POST',
+                    signal: controller.signal,
                     body: JSON.stringify({
                         action: "actualizarCategoria",
                         id: id,
                         nombre: nuevoNombre
                     })
                 });
+                clearTimeout(timeoutId);
+
                 const resultado = await response.json();
                 if (resultado.success) {
                     console.log("✅ Categoría actualizada en la nube correctamente.");
                 } else {
-                    console.error("❌ Error en la nube:", resultado.message);
+                    console.error("❌ En la nube:", resultado.message);
                 }
+
+                // ⏱️ Pausa visual fluida para que se aprecie el spinner
+                await new Promise(resolve => setTimeout(resolve, 500));
+
             } catch (error) {
-                console.error("❌ Error de red al sincronizar con Google Sheets:", error);
+                console.warn("⚠️ Aviso de red al actualizar categoría (se aplicó localmente):", error);
+            } finally {
+                // 🌀 2. OCULTAR SPINNER GLOBAL SIEMPRE (Pase lo que pase)
+                ocultarSpinnerGlobal();
             }
 
-            // 5. Restablecer la variable global de edición para que regresen los botones principales
+            // 5. Restablecer la variable global de edición
             if (typeof editandoId !== 'undefined') {
                 editandoId = null;
             }
@@ -241,6 +259,7 @@ async function saveEdit(id) {
         }
     } catch (error) {
         console.error("Error crítico en saveEdit de categorías:", error);
+        ocultarSpinnerGlobal(); // Garantía de seguridad por si ocurre un fallo inesperado
     }
 }
 
