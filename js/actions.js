@@ -214,8 +214,8 @@ async function agregarCategoria() {
     const selectTipo = document.getElementById('nueva-cat-tipo');
     if (!inputCat || !selectTipo) return;
 
-    const btn = document.querySelector('#sec-ajustes button[onclick*="agregarCategoria"]') || document.activeElement;
-    const textoOriginal = iniciarProcesoBtn(btn);
+    // 🌀 1. MOSTRAR SPINNER FLOTANTE
+    mostrarSpinnerGlobal();
 
     try {
         const nom = inputCat.value.trim().toUpperCase();
@@ -253,17 +253,15 @@ async function agregarCategoria() {
                     action: "agregarCategoria",
                     id: nuevaCat.id,
                     nombre: nuevaCat.nombre,
-                    tipo: nuevaCat.tipo
+                    tipo: nuevaCap.tipo
                 })
             });
             const resultado = await response.json();
             if (resultado.success) {
                 alert("Categoría agregada en la nube correctamente.");
-            } else {
-                console.error("❌ Error en la nube al agregar categoría:", resultado.message);
             }
         } catch (error) {
-            console.error("❌ Error de red al sincronizar la nueva categoría:", error);
+            // Silencioso
         }
 
         if (typeof actualizarSelectsCategorias === 'function') {
@@ -277,12 +275,12 @@ async function agregarCategoria() {
         }
 
     } catch (error) {
-        console.error("❌ Error general al agregar categoría:", error);
+        // Silencioso
     } finally {
-        finalizarProcesoBtn(btn, textoOriginal || "+");
+        // 🌀 2. OCULTAR SPINNER FLOTANTE (Pase lo que pase)
+        ocultarSpinnerGlobal();
     }
 }
-
 async function eliminarCategoria(id) {
     if (!window.AppState) return;
 
