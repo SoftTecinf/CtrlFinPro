@@ -235,6 +235,81 @@ async function agregarCategoria() {
             tipo: tipo
         };
 
+        // 1. Agregar localmente
+        window.AppState.categorias.push(nuevaCat);
+
+        localStorage.setItem('cats_mxn', JSON.stringify(window.AppState.categorias));
+        if (typeof guardarEstadoGlobal === 'function') {
+            guardarEstadoGlobal();
+        } else {
+            localStorage.setItem('financiero_state', JSON.stringify(window.AppState));
+        }
+
+        inputCat.value = '';
+
+        // 2. Sincronización con la nube
+        try {
+            const response = await fetch(API_URL, {
+                method: 'POST',
+                body: JSON.stringify({
+                    action: "agregarCategoria",
+                    id: nuevaCat.id,
+                    nombre: nuevaCat.nombre,
+                    tipo: nuevaCat.tipo
+                })
+            });
+            const resultado = await response.json();
+            if (resultado.success) {
+                alert("Categoría agregada en la nube correctamente.");
+            }
+        } catch (error) {
+            // Silenciamos los errores de consola innecesarios y manejamos de forma limpia
+        }
+
+        // 3. Refrescar interfaz
+        if (typeof actualizarSelectsCategorias === 'function') {
+            actualizarSelectsCategorias();
+        }
+        if (typeof abrirVistaAjustesInteligente === 'function') {
+            abrirVistaAjustesInteligente();
+        }
+        if (typeof refrescarVistaActual === 'function') {
+            refrescarVistaActual();
+        }
+
+    } catch (error) {
+        // Silencio en consola
+    } finally {
+        finalizarProcesoBtn(btn, textoOriginal || "+");
+    }
+}
+
+async function agregarCategoria() {
+    const inputCat = document.getElementById('nueva-cat-nombre');
+    const selectTipo = document.getElementById('nueva-cat-tipo');
+    if (!inputCat || !selectTipo) return;
+
+    const btn = document.querySelector('#sec-ajustes button[onclick*="agregarCategoria"]') || document.activeElement;
+    const textoOriginal = iniciarProcesoBtn(btn);
+
+    try {
+        const nom = inputCat.value.trim().toUpperCase();
+        const tipo = selectTipo.value;
+
+        if (!nom || !window.AppState) return;
+
+        const existe = window.AppState.categorias.some(c => c.nombre.toUpperCase() === nom && c.tipo === tipo);
+        if (existe) {
+            alert("Esta categoría ya existe.");
+            return;
+        }
+
+        const nuevaCat = {
+            id: Date.now(),
+            nombre: nom,
+            tipo: tipo
+        };
+
         window.AppState.categorias.push(nuevaCat);
 
         localStorage.setItem('cats_mxn', JSON.stringify(window.AppState.categorias));
