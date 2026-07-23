@@ -3,12 +3,12 @@
         <!-- 📅 RANGO DE FECHAS (Inicia del 1ro al día actual del sistema, modificable por el usuario) -->
         <div class="flex items-center gap-2 bg-white px-3 py-1.5 rounded-xl shadow-sm border">
             <span class="text-[10px] font-bold opacity-50 uppercase">Del:</span>
-            <input type="date" id="in-fecha-inicio" onchange="refrescarVistaActual()"
+            <input type="date" id="in-fecha-inicio" onchange="guardarFiltrosIngresos(); refrescarVistaActual();"
                 class="bg-transparent text-[10px] font-bold outline-none cursor-pointer">
         </div>
         <div class="flex items-center gap-2 bg-white px-3 py-1.5 rounded-xl shadow-sm border">
             <span class="text-[10px] font-bold opacity-50 uppercase">Al:</span>
-            <input type="date" id="in-fecha-fin" onchange="refrescarVistaActual()"
+            <input type="date" id="in-fecha-fin" onchange="guardarFiltrosIngresos(); refrescarVistaActual();"
                 class="bg-transparent text-[10px] font-bold outline-none cursor-pointer">
         </div>
 
