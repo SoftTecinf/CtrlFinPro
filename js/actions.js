@@ -581,25 +581,20 @@ window.generarLibroContable = async function() {
     console.log("📦 Total de movimientos en AppState:", todosLosMovimientos.length, todosLosMovimientos);
 
     const filtrados = todosLosMovimientos.filter(m => {
-        if (!m.fecha) {
-            console.log("⚠️ Movimiento sin fecha ignorado:", m);
-            return false;
-        }
-        
-        let fechaMovStr = m.fecha;
-        // Si viene en formato DD/MM/YYYY
-        if (fechaMovStr.includes('/')) {
-            const partes = fechaMovStr.split('/');
-            if (partes.length === 3) {
-                fechaMovStr = `${partes[2]}-${partes[1].padStart(2, '0')}-${partes[0].padStart(2, '0')}`;
-            }
-        }
+        if (!m.fecha) return false;
 
-        const fechaMov = new Date(fechaMovStr + 'T00:00:00');
-        const cumple = fechaMov >= fechaInicio && fechaMov <= fechaFin;
+        // Convertir cualquier formato de fecha (string largo, objeto Date o texto) a un objeto Date limpio
+        const fechaMov = new Date(m.fecha);
+        if (isNaN(fechaMov.getTime())) return false;
 
-        console.log(`🔍 Evaluando mov [${m.cat}]: fecha original '${m.fecha}' -> convertida '${fechaMovStr}' | ¿Entra en rango?:`, cumple);
-        return cumple;
+        // Limpiar las horas para comparar únicamente las fechas (Año, Mes, Día)
+        fechaMov.setHours(0, 0, 0, 0);
+        const inicioLimpieza = new Date(fechaInicio);
+        inicioLimpieza.setHours(0, 0, 0, 0);
+        const finLimpieza = new Date(fechaFin);
+        finLimpieza.setHours(23, 59, 59, 999);
+
+        return fechaMov >= inicioLimpieza && fechaMov <= finLimpieza;
     });
 
     console.log("✅ Movimientos que pasaron el filtro:", filtrados.length);
