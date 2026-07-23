@@ -287,30 +287,38 @@ async function eliminarCategoria(id) {
     mostrarSpinnerGlobal();
 
     try {
+        // Actualizamos estado local
         window.AppState.categorias = window.AppState.categorias.filter(c => String(c.id) !== String(id));
         localStorage.setItem('cats_mxn', JSON.stringify(window.AppState.categorias));
         localStorage.setItem('financiero_state', JSON.stringify(window.AppState));
 
-        // Petición a la nube de forma silenciosa
+        // Petición a la nube (con un timeout de seguridad por si la red falla)
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 8000); // 8 segundos máx
+
         const response = await fetch(API_URL, {
             method: 'POST',
+            signal: controller.signal,
             body: JSON.stringify({
                 action: "eliminarCategoria",
                 id: id
             })
         });
+        clearTimeout(timeoutId);
+        
         await response.json();
 
         // ⏱️ Pausa visual fluida para que se aprecie el spinner
-        await new Promise(resolve => setTimeout(resolve, 500));
+        await new Promise(resolve => setTimeout(resolve, 400));
 
     } catch (error) {
-        console.error("❌ Error de red:", error);
+        console.warn("⚠️ Aviso de red al eliminar categoría (se aplicó localmente):", error);
     } finally {
-        // 🌀 2. OCULTAR SPINNER GLOBAL AL TERMINAR (Pase lo que pase)
+        // 🌀 2. OCULTAR SPINNER GLOBAL SIEMPRE (Pase lo que pase)
         ocultarSpinnerGlobal();
     }
 
+    // Refrescamos las vistas al terminar el proceso de forma segura
     if (typeof abrirVistaAjustesInteligente === 'function') abrirVistaAjustesInteligente();
     if (typeof actualizarSelectsCategorias === 'function') actualizarSelectsCategorias();
     if (typeof refrescarVistaActual === 'function') refrescarVistaActual();
